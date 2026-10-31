@@ -62,6 +62,19 @@ switch ($action) {
         break;
 
     // --- TRANG CHỦ ---
+
+    case 'home':
+    case 'about':
+        require_once __DIR__ . '/config/database.php';
+        $db = (new Database())->getConnection();
+        $doctors = $db->query(
+            "SELECT doctor_id, full_name, specialty
+            FROM doctors
+            ORDER BY full_name"
+        )->fetchAll(PDO::FETCH_ASSOC);
+        require __DIR__ . '/views/home.php';
+        break;
+
     case 'home':
     default:
         require_once __DIR__ . '/../app/views/partials/header.php';

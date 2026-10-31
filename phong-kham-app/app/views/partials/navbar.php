@@ -7,9 +7,13 @@ $role = Auth::getRole();
     Hotline: 0931 999 309 | Giờ làm việc: T2-T7 (7:00 - 17:00), CN (7:00 - 11:00)
 </div>
 <div class="navbar">
-    <a href="/index.php" class="navbar-brand">PHÒNG KHÁM ĐA KHOA PLACEHOLDER</a>
+    <a href="/index.php" class="navbar-brand">
+        Hưng Định
+        <span class="brand-sub">Phòng khám đa khoa</span>
+    </a>
     <div class="nav-links">
         <a href="/index.php">Trang Chủ</a>
+        <a href="/index.php?action=about">Giới thiệu</a>
 
         <?php if ($role === 'patient'): ?>
             <!-- Menu dành cho Bệnh nhân -->
@@ -37,7 +41,9 @@ $role = Auth::getRole();
         <?php endif; ?>
 
         <?php if (Auth::isLoggedIn()): ?>
-            <a href="/index.php?action=logout" style="color: red;">Đăng Xuất (<?php echo $_SESSION['username']; ?>)</a>
+            <a href="/index.php?action=logout" class="link-logout">
+                Đăng xuất (<?php echo htmlspecialchars($_SESSION['username']); ?>)
+            </a>
         <?php else: ?>
             <a href="/index.php?action=login">Đăng Nhập</a>
             <a href="/index.php?action=booking" class="btn-booking">Đặt Lịch Khám</a>

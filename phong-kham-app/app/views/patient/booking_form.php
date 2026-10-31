@@ -1,33 +1,67 @@
-<?php require_once __DIR__ . '/../partials/header.php'; ?>
-<?php require_once __DIR__ . '/../partials/navbar.php'; ?>
+<?php
+require_once __DIR__ . '/../partials/header.php';
+require_once __DIR__ . '/../partials/navbar.php';
+require_once __DIR__ . '/../../helpers/Auth.php';
 
-<h2>Đăng Ký Đặt Lịch Khám Trực Tuyến</h2>
-<p style="color: #666;">Điền đầy đủ thông tin bên dưới để được ưu tiên sắp xếp lịch khám.</p>
+Auth::startSession();
+$isPatient = Auth::getRole() === 'patient';
+$selectedDoctor = isset($_GET['doctor_id']) ? (int) $_GET['doctor_id'] : 0;
+?>
 
-<form action="/index.php?action=submit_booking" method="POST" style="background: white; padding: 20px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 600px;">
-    <div style="margin-bottom: 15px;">
-        <label><strong>Chọn Bác Sĩ Khám:</strong></label><br>
-        <select name="doctor_id" required style="width: 100%; padding: 10px; margin-top: 5px;">
-            <option value="">-- Chọn bác sĩ/chuyên khoa --</option>
+<h2>Đăng ký đặt lịch khám</h2>
+<p class="lead">
+    Lịch mới ở trạng thái chờ duyệt cho đến khi lễ tân xác nhận.
+</p>
+
+<form class="card form-narrow" action="/index.php?action=submit_booking" method="POST">
+    <?php if (!$isPatient): ?>
+        <div class="form-row">
+            <label>
+                Họ tên bệnh nhân
+                <input type="text" name="full_name" required>
+            </label>
+            <label>
+                Số điện thoại
+                <input type="tel" name="phone" required>
+            </label>
+        </div>
+    <?php endif; ?>
+
+    <label>
+        Bác sĩ
+        <select name="doctor_id" required>
+            <option value="">Chọn bác sĩ và chuyên khoa</option>
             <?php foreach ($doctors as $doc): ?>
-                <option value="<?php echo $doc['doctor_id']; ?>">
-                    BS. <?php echo $doc['full_name']; ?> - Chuyên khoa: <?php echo $doc['specialty']; ?>
+                <option
+                    value="<?php echo (int) $doc['doctor_id']; ?>"
+                    <?php echo $selectedDoctor === (int) $doc['doctor_id'] ? 'selected' : ''; ?>
+                >
+                    BS. <?php echo htmlspecialchars($doc['full_name']); ?>
+                    — <?php echo htmlspecialchars($doc['specialty']); ?>
                 </option>
             <?php endforeach; ?>
         </select>
-    </div>
+    </label>
 
-    <div style="margin-bottom: 15px;">
-        <label><strong>Ngày và Giờ Muốn Khám:</strong></label><br>
-        <input type="datetime-local" name="appointment_date" required style="width: 100%; padding: 10px; margin-top: 5px;">
-    </div>
+    <label>
+        Ngày và giờ muốn khám
+        <input type="datetime-local" name="appointment_date" required>
+    </label>
+    <p class="lead">Thứ 2 – thứ 7: 7:00–17:00. Chủ nhật: 7:00–11:00.</p>
 
-    <div style="margin-bottom: 15px;">
-        <label><strong>Lý do khám / Triệu chứng bệnh:</strong></label><br>
-        <textarea name="note" rows="4" placeholder="Mô tả ngắn gọn về tình trạng sức khỏe của bạn..." required style="width: 100%; padding: 10px; margin-top: 5px;"></textarea>
-    </div>
+    <label>
+        Lý do khám / triệu chứng
+        <textarea
+            name="note"
+            rows="4"
+            required
+            placeholder="Ví dụ: sốt từ hôm qua, đau họng khi nuốt."
+        ></textarea>
+    </label>
 
-    <button type="submit" style="background-color: #004b93; color: white; border: none; padding: 12px 20px; font-weight: bold; cursor: pointer; border-radius: 4px;">GỬI YÊU CẦU ĐẶT LỊCH</button>
+    <p>
+        <button class="btn-navy" type="submit">Gửi yêu cầu đặt lịch</button>
+    </p>
 </form>
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>
