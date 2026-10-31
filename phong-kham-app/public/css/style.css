@@ -72,7 +72,40 @@ h2,
 }
 
 .nav-links a:hover {
+    color: #06243f;
+}
+
+.nav-links a.btn-booking,
+.btn-booking {
+    background: #c24e12;
+    color: #fffdf8;
+}
+
+.nav-links a.btn-booking:hover,
+.btn-booking:hover {
+    background: #9a3c0c;
+    color: #fffdf8;
+}
+
+.btn-navy:hover {
+    background: #06243f;
+    color: #fffdf8;
+}
+
+.btn-ghost:hover {
+    border-color: #0a3a6b;
+    background: #e6eef6;
+    color: #0a3a6b;
+}
+
+.doc-book {
     color: #c24e12;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.doc-book:hover {
+    color: #9a3c0c;
 }
 
 .link-logout {

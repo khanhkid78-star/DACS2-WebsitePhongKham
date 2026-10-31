@@ -19,7 +19,6 @@ $role = Auth::getRole();
 
     <div class="nav-links">
         <a href="/index.php">Trang Chủ</a>
-        <a href="/index.php?action=about">Giới thiệu</a>
 
         <?php if ($role === 'patient'): ?>
             <!-- Menu dành cho Bệnh nhân -->

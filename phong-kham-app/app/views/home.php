@@ -86,7 +86,7 @@ $prices = array(
         <div class="grid-4">
             <?php foreach ($doctors as $doc): ?>
                 <article class="doctor">
-                    
+
                     <span class="doc-initial">
                         <?php echo htmlspecialchars(mb_substr($doc['full_name'], 0, 1)); ?>
                     </span>
@@ -96,7 +96,7 @@ $prices = array(
                     </h3>
                     <p><?php echo htmlspecialchars($doc['specialty']); ?></p>
                     <p>
-                        <a href="/index.php?action=booking&doctor_id=<?php echo (int) $doc['doctor_id']; ?>">
+                        <a class="doc-book" href="/index.php?action=booking&doctor_id=<?php echo (int) $doc['doctor_id']; ?>">
                             Đặt với bác sĩ này
                         </a>
                     </p>
