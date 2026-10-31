@@ -63,28 +63,20 @@ switch ($action) {
 
     // --- TRANG CHỦ ---
 
-    case 'home':
-    case 'about':
-        require_once __DIR__ . '/config/database.php';
-        $db = (new Database())->getConnection();
-        $doctors = $db->query(
-            "SELECT doctor_id, full_name, specialty
-            FROM doctors
-            ORDER BY full_name"
-        )->fetchAll(PDO::FETCH_ASSOC);
-        require __DIR__ . '/views/home.php';
-        break;
+        case 'home':
+            case 'about':
+                require_once __DIR__ . '/../app/config/database.php';
+                $db = (new Database())->getConnection();
+                $doctors = $db->query(
+                    "SELECT doctor_id, full_name, specialty
+                    FROM doctors
+                    ORDER BY full_name"
+                )->fetchAll(PDO::FETCH_ASSOC);
+                require __DIR__ . '/../app/views/home.php';
+                break;
 
-    case 'home':
-    default:
-        require_once __DIR__ . '/../app/views/partials/header.php';
-        require_once __DIR__ . '/../app/views/partials/navbar.php';
-        echo "<div style='text-align: center; padding: 50px 0;'>
-                <h1 style='color: #004b93;'>TRUNG TÂM Y KHOA PHÚC KHANG</h1>
-                <p>Hệ thống Đặt lịch khám trực tuyến và Quản lý Bệnh án chuyên nghiệp.</p>
-                <a href='/index.php?action=booking' style='background: #ff6b00; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;'>ĐẶT LỊCH KHÁM NGAY</a>
-              </div>";
-        require_once __DIR__ . '/../app/views/partials/footer.php';
-        break;
-}
+            default:
+                header('Location: /index.php?action=home');
+                exit();
+        }
 ?>
