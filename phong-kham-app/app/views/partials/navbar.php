@@ -11,6 +11,9 @@ $role = Auth::getRole();
         Hưng Định
         <span class="brand-sub">Phòng khám đa khoa</span>
     </a>
+
+    <button class="nav-toggle" type="button">Menu</button>
+
     <div class="nav-links">
         <a href="/index.php">Trang Chủ</a>
         <a href="/index.php?action=about">Giới thiệu</a>
