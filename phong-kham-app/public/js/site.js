@@ -16,7 +16,7 @@ window.addEventListener("scroll", function () {
 });
 
 var nodes = document.querySelectorAll(
-    ".hero, .specialty, .doctor, .step, .card"
+    ".hero, .specialty, .doctor, .step, .card, .steps-band"
 );
 
 nodes.forEach(function (node, index) {

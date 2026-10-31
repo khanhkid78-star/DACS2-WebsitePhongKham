@@ -13,6 +13,12 @@ if ($path === '/site.js' || $path === '/public/js/site.js') {
     exit;
 }
 
+if ($path === '/photos/lobby.jpg' || $path === '/public/photos/lobby.jpg') {
+    header('Content-Type: image/jpeg');
+    readfile(__DIR__ . '/../public/photos/lobby.jpg');
+    exit;
+}
+
 require_once __DIR__ . '/../app/helpers/Auth.php';
 require_once __DIR__ . '/../app/controllers/AuthController.php';
 require_once __DIR__ . '/../app/controllers/BookingController.php';

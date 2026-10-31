@@ -21,32 +21,49 @@ $prices = array(
 );
 ?>
 
+<?php if (isset($_GET['booked'])): ?>
+    <p class="alert">Đã gửi yêu cầu. Lễ tân sẽ gọi xác nhận.</p>
+<?php endif; ?>
+
 <section class="hero">
     <div>
-        <p class="kicker">Phòng khám đa khoa</p>
+        <p class="kicker">Đa khoa · Phú Nhuận</p>
         <h1>Khám đúng chuyên khoa. Không chờ cả buổi.</h1>
         <p class="lead">
             Chọn bác sĩ, gửi triệu chứng. Lễ tân gọi xác nhận
-            trước khi bạn đến. Hotline 0931 999 309.
+            trước khi bạn đến.
         </p>
         <div class="actions">
             <a class="btn-booking" href="/index.php?action=booking">
                 Đặt lịch khám
             </a>
             <a class="btn-ghost" href="#chuyen-khoa">
-                Xem chuyên khoa
+                Xem 8 chuyên khoa
             </a>
         </div>
+        <dl class="stats">
+            <div>
+                <dt>Chuyên khoa</dt>
+                <dd>8</dd>
+            </div>
+            <div>
+                <dt>Bác sĩ</dt>
+                <dd><?php echo count($doctors); ?></dd>
+            </div>
+            <div>
+                <dt>Giờ chủ nhật</dt>
+                <dd>11h</dd>
+            </div>
+        </dl>
     </div>
-    <aside class="card">
-        <p class="kicker">Giờ làm việc</p>
-        <p><strong>Thứ 2 – Thứ 7</strong><br>7:00 – 17:00</p>
-        <p><strong>Chủ nhật</strong><br>7:00 – 11:00</p>
-        <p class="lead">
-            Giấy phép hoạt động số CRN0401597030.
-            Địa chỉ: 128 Nguyễn Văn Trỗi, Phú Nhuận.
-        </p>
-    </aside>
+    <div class="hero-photo">
+        <img src="/public/photos/lobby.jpg" alt="Sảnh tiếp đón phòng khám">
+        <aside class="hero-card">
+            <p class="kicker">Đường dây trực</p>
+            <a href="tel:0931999309">0931 999 309</a>
+            <p class="lead">Lễ tân trực trong giờ khám</p>
+        </aside>
+    </div>
 </section>
 
 <section class="section" id="chuyen-khoa">
@@ -69,6 +86,11 @@ $prices = array(
         <div class="grid-4">
             <?php foreach ($doctors as $doc): ?>
                 <article class="doctor">
+                    
+                    <span class="doc-initial">
+                        <?php echo htmlspecialchars(mb_substr($doc['full_name'], 0, 1)); ?>
+                    </span>
+
                     <h3>
                         BS. <?php echo htmlspecialchars($doc['full_name']); ?>
                     </h3>
@@ -84,22 +106,22 @@ $prices = array(
     <?php endif; ?>
 </section>
 
-<section class="section">
-    <h2>Một lần đặt lịch đi qua ba bước</h2>
+<section class="steps-band">
     <div class="grid-3">
-        <article class="step">
-            <h3>1. Gửi yêu cầu</h3>
-            <p class="lead">Lịch mới ở trạng thái chờ duyệt.</p>
+        <article>
+            <p class="step-no">01</p>
+            <h2>Gửi yêu cầu</h2>
+            <p>Lịch vào hàng chờ, trạng thái Chờ duyệt.</p>
         </article>
-        <article class="step">
-            <h3>2. Lễ tân xác nhận</h3>
-            <p class="lead">Duyệt thành đã lên lịch, hoặc hủy nếu trùng ca.</p>
+        <article>
+            <p class="step-no">02</p>
+            <h2>Lễ tân xác nhận</h2>
+            <p>Duyệt thành Đã lên lịch, hoặc hủy nếu trùng ca.</p>
         </article>
-        <article class="step">
-            <h3>3. Đến đúng giờ</h3>
-            <p class="lead">
-                Bác sĩ ghi bệnh án, y tá đối chiếu thuốc, lễ tân lập hóa đơn.
-            </p>
+        <article>
+            <p class="step-no">03</p>
+            <h2>Đến đúng giờ</h2>
+            <p>Bác sĩ ghi bệnh án, y tá đối chiếu thuốc, lễ tân lập hóa đơn.</p>
         </article>
     </div>
 </section>

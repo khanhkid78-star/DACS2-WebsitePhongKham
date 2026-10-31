@@ -56,7 +56,11 @@ class BookingController {
             $appointment_date,
             $note
         )) {
-            header('Location: /index.php?action=my_appointments');
+            if (Auth::getRole() === 'patient') {
+                header('Location: /index.php?action=my_appointments');
+            } else {
+                header('Location: /index.php?action=home&booked=1');
+            }
             exit();
         }
 
@@ -78,10 +82,12 @@ class BookingController {
         }
 
         $insert = $this->db->prepare(
-            "INSERT INTO patients (full_name, phone) VALUES (?, ?)"
+            "INSERT INTO patients (full_name, phone)
+            VALUES (?, ?)
+            RETURNING patient_id"
         );
         $insert->execute(array($fullName, $phone));
-        return (int) $this->db->lastInsertId();
+        return (int) $insert->fetchColumn();
     }
 
     public function myAppointments() {

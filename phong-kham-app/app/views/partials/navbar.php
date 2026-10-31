@@ -8,8 +8,11 @@ $role = Auth::getRole();
 </div>
 <div class="navbar">
     <a href="/index.php" class="navbar-brand">
-        Hưng Định
-        <span class="brand-sub">Phòng khám đa khoa</span>
+        <span class="navbar-mark">PK</span>
+        <span>
+            Hưng Định
+            <span class="brand-sub">Phòng khám đa khoa</span>
+        </span>
     </a>
 
     <button class="nav-toggle" type="button">Menu</button>
