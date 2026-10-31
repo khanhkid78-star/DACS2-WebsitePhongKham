@@ -1,10 +1,67 @@
 <?php
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+
+if ($path === '/style.css' || $path === '/public/css/style.css') {
+    header('Content-Type: text/css; charset=UTF-8');
+    readfile(__DIR__ . '/../public/css/style.css');
+    exit;
+}
 require_once __DIR__ . '/../app/helpers/Auth.php';
+
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+
+if ($path === '/style.css' || $path === '/public/css/style.css') {
+    header('Content-Type: text/css; charset=UTF-8');
+    readfile(__DIR__ . '/../public/css/style.css');
+    exit;
+}
 require_once __DIR__ . '/../app/controllers/AuthController.php';
+
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+
+if ($path === '/style.css' || $path === '/public/css/style.css') {
+    header('Content-Type: text/css; charset=UTF-8');
+    readfile(__DIR__ . '/../public/css/style.css');
+    exit;
+}
+
 require_once __DIR__ . '/../app/controllers/BookingController.php';
+
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+
+if ($path === '/style.css' || $path === '/public/css/style.css') {
+    header('Content-Type: text/css; charset=UTF-8');
+    readfile(__DIR__ . '/../public/css/style.css');
+    exit;
+}
+
 require_once __DIR__ . '/../app/controllers/RecordController.php';
+
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+
+if ($path === '/style.css' || $path === '/public/css/style.css') {
+    header('Content-Type: text/css; charset=UTF-8');
+    readfile(__DIR__ . '/../public/css/style.css');
+    exit;
+}
 require_once __DIR__ . '/../app/controllers/InvoiceController.php';
+
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+
+if ($path === '/style.css' || $path === '/public/css/style.css') {
+    header('Content-Type: text/css; charset=UTF-8');
+    readfile(__DIR__ . '/../public/css/style.css');
+    exit;
+}
 require_once __DIR__ . '/../app/controllers/MedicineController.php';
+
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+
+if ($path === '/style.css' || $path === '/public/css/style.css') {
+    header('Content-Type: text/css; charset=UTF-8');
+    readfile(__DIR__ . '/../public/css/style.css');
+    exit;
+}
 require_once __DIR__ . '/../app/controllers/AdminController.php';
 
 Auth::startSession();
