@@ -472,9 +472,11 @@ h1 {
 }
 
 .steps-band {
-    width: 100vw;
+    box-sizing: border-box;
+    width: auto;
     margin-top: 48px;
     margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
     padding: 56px 16px;
     background: #06243f;
     color: #fffdf8;
