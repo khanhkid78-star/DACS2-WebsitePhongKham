@@ -43,6 +43,13 @@ switch ($action) {
         (new AuthController())->logout();
         break;
 
+    case 'register':
+        (new AuthController())->showRegister();
+        break;
+    case 'do_register':
+        (new AuthController())->register();
+        break;
+
     case 'booking':
         (new BookingController())->showForm();
         break;

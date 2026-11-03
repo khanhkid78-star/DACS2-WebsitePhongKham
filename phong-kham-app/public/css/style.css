@@ -529,3 +529,30 @@ h1 {
         grid-template-columns: 1fr;
     }
 }
+
+.btn-logout {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: #9a3c0c;
+    color: #fffdf8 !important;
+    font-weight: 700;
+    text-decoration: none;
+}
+.role-chip {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #e6eef6;
+    color: #0a3a6b;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.role-dash {
+    margin-bottom: 28px;
+    border-left: 6px solid #c24e12;
+}
+.role-dash h2 {
+    margin-top: 6px;
+}

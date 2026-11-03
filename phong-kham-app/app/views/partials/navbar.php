@@ -46,12 +46,12 @@ $role = Auth::getRole();
         <?php endif; ?>
 
         <?php if (Auth::isLoggedIn()): ?>
-            <a href="/index.php?action=logout" class="link-logout">
-                Đăng xuất (<?php echo htmlspecialchars($_SESSION['username']); ?>)
-            </a>
+            <span class="role-chip"><?php echo htmlspecialchars($roleLabel); ?></span>
+            <span class="nav-user"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
+            <a href="/index.php?action=logout" class="btn-logout">Đăng xuất</a>
         <?php else: ?>
-            <a href="/index.php?action=login">Đăng Nhập</a>
-            <a href="/index.php?action=booking" class="btn-booking">Đặt Lịch Khám</a>
+            <a href="/index.php?action=login">Đăng nhập</a>
+            <a href="/index.php?action=register" class="btn-booking">Đăng ký</a>
         <?php endif; ?>
     </div>
 </div>

@@ -39,5 +39,27 @@ class Auth {
             exit();
         }
     }
+
+    public static function dashboardUrl($role) {
+        $map = array(
+            'patient' => '/index.php?action=my_appointments',
+            'doctor' => '/index.php?action=doctor_records',
+            'nurse' => '/index.php?action=nurse_medicines',
+            'receptionist' => '/index.php?action=receptionist_appointments',
+            'admin' => '/index.php?action=admin_users',
+        );
+        return isset($map[$role]) ? $map[$role] : '/index.php';
+    }
+
+    public static function roleLabel($role) {
+        $map = array(
+            'admin' => 'Quản trị',
+            'doctor' => 'Bác sĩ',
+            'nurse' => 'Y tá',
+            'receptionist' => 'Lễ tân',
+            'patient' => 'Bệnh nhân',
+        );
+        return isset($map[$role]) ? $map[$role] : 'Khách';
+    }
 }
 ?>

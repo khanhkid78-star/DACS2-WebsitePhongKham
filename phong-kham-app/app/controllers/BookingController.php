@@ -14,53 +14,43 @@ class BookingController {
     }
 
     public function showForm() {
-        $stmt = $this->db->query(
-            "SELECT doctor_id, full_name, specialty FROM doctors"
-        );
-        $doctors = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        require_once __DIR__ . '/../views/patient/booking_form.php';
+    Auth::checkRole(array('patient'));
+    if (empty($_SESSION['patient_id'])) {
+        echo 'Tài khoản này chưa gắn hồ sơ bệnh nhân, không đặt lịch được.';
+        return;
+    }
+
+    $stmt = $this->db->query(
+        "SELECT doctor_id, full_name, specialty FROM doctors ORDER BY full_name"
+    );
+    $doctors = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    require_once __DIR__ . '/../views/patient/booking_form.php';
     }
 
     public function submit() {
+        Auth::checkRole(array('patient'));
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /index.php?action=booking');
             exit();
         }
 
-        Auth::startSession();
+        $patient_id = (int) ($_SESSION['patient_id'] ?? 0);
         $doctor_id = (int) ($_POST['doctor_id'] ?? 0);
         $appointment_date = trim($_POST['appointment_date'] ?? '');
         $note = trim($_POST['note'] ?? '');
 
+        if ($patient_id < 1) {
+            echo 'Tài khoản chưa gắn hồ sơ bệnh nhân.';
+            return;
+        }
         if ($doctor_id < 1 || $appointment_date === '' || $note === '') {
             echo 'Thiếu bác sĩ, ngày giờ hoặc triệu chứng.';
             return;
         }
 
-        if (!empty($_SESSION['patient_id'])) {
-            $patient_id = (int) $_SESSION['patient_id'];
-        } else {
-            $patient_id = $this->findOrCreatePatient(
-                trim($_POST['full_name'] ?? ''),
-                trim($_POST['phone'] ?? '')
-            );
-            if (!$patient_id) {
-                echo 'Khách chưa đăng nhập phải điền họ tên và số điện thoại.';
-                return;
-            }
-        }
-
-        if ($this->appointmentModel->create(
-            $patient_id,
-            $doctor_id,
-            $appointment_date,
-            $note
-        )) {
-            if (Auth::getRole() === 'patient') {
-                header('Location: /index.php?action=my_appointments');
-            } else {
-                header('Location: /index.php?action=home&booked=1');
-            }
+        if ($this->appointmentModel->create($patient_id, $doctor_id, $appointment_date, $note)) {
+            header('Location: /index.php?action=my_appointments&booked=1');
             exit();
         }
 

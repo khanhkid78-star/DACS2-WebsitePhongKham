@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/partials/header.php';
 require_once __DIR__ . '/partials/navbar.php';
+require_once __DIR__ . '/../helpers/Auth.php';
+
+Auth::startSession();
+$role = Auth::getRole();
 
 $specialties = array(
     'Nội tổng quát' => 'Khám định kỳ, sốt, đau bụng, huyết áp.',
@@ -23,6 +27,44 @@ $prices = array(
 
 <?php if (isset($_GET['booked'])): ?>
     <p class="alert">Đã gửi yêu cầu. Lễ tân sẽ gọi xác nhận.</p>
+<?php endif; ?>
+
+<?php if (Auth::isLoggedIn()): ?>
+    <section class="role-dash card">
+        <p class="kicker"><?php echo htmlspecialchars(Auth::roleLabel($role)); ?></p>
+        <h2>Xin chào, <?php echo htmlspecialchars($_SESSION['username']); ?></h2>
+        <?php if ($role === 'patient'): ?>
+            <p class="lead">Đặt lịch và xem lịch của chính bạn. Khách chưa đăng nhập không đặt được.</p>
+            <div class="actions">
+                <a class="btn-booking" href="/index.php?action=booking">Đặt lịch khám</a>
+                <a class="btn-ghost" href="/index.php?action=my_appointments">Lịch của tôi</a>
+            </div>
+        <?php elseif ($role === 'doctor'): ?>
+            <p class="lead">Bạn xem hồ sơ bệnh án. Không có quyền duyệt lịch hay sửa kho thuốc.</p>
+            <div class="actions">
+                <a class="btn-navy" href="/index.php?action=doctor_records">Mở hồ sơ bệnh án</a>
+            </div>
+        <?php elseif ($role === 'nurse'): ?>
+            <p class="lead">Bạn quản lý kho thuốc. Đặt lịch và hóa đơn không thuộc quyền này.</p>
+            <div class="actions">
+                <a class="btn-navy" href="/index.php?action=nurse_medicines">Mở kho thuốc</a>
+            </div>
+        <?php elseif ($role === 'receptionist'): ?>
+            <p class="lead">Bạn duyệt lịch hẹn và xem hóa đơn. Bệnh nhân tự đặt sau khi đăng nhập.</p>
+            <div class="actions">
+                <a class="btn-navy" href="/index.php?action=receptionist_appointments">Duyệt lịch hẹn</a>
+                <a class="btn-ghost" href="/index.php?action=invoices">Hóa đơn</a>
+            </div>
+        <?php elseif ($role === 'admin'): ?>
+            <p class="lead">Bạn xem toàn bộ: tài khoản, lịch, bệnh án, thuốc, hóa đơn.</p>
+            <div class="actions">
+                <a class="btn-navy" href="/index.php?action=admin_users">Tài khoản</a>
+                <a class="btn-ghost" href="/index.php?action=receptionist_appointments">Lịch hẹn</a>
+                <a class="btn-ghost" href="/index.php?action=doctor_records">Bệnh án</a>
+                <a class="btn-ghost" href="/index.php?action=invoices">Hóa đơn</a>
+            </div>
+        <?php endif; ?>
+    </section>
 <?php endif; ?>
 
 <section class="hero">
