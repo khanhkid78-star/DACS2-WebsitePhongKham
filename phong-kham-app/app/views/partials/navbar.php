@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../helpers/Auth.php';
 Auth::startSession();
+$roleLabel = Auth::roleLabel($role);
 $role = Auth::getRole();
 ?>
 <div class="top-header">
@@ -46,12 +47,13 @@ $role = Auth::getRole();
         <?php endif; ?>
 
         <?php if (Auth::isLoggedIn()): ?>
-            <span class="role-chip"><?php echo htmlspecialchars($roleLabel); ?></span>
-            <span class="nav-user"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
+            <span class="role-chip"><?php echo htmlspecialchars((string) $roleLabel); ?></span>
+            <span class="nav-user"><?php echo htmlspecialchars((string) ($_SESSION['username'] ?? '')); ?></span>
             <a href="/index.php?action=logout" class="btn-logout">Đăng xuất</a>
         <?php else: ?>
-            <a href="/index.php?action=login">Đăng nhập</a>
-            <a href="/index.php?action=register" class="btn-booking">Đăng ký</a>
+            <a href="/index.php?action=login&next=booking">Đăng nhập</a>
+            <a href="/index.php?action=register">Đăng ký</a>
+            <a href="/index.php?action=booking" class="btn-booking">Đặt Lịch Khám</a>
         <?php endif; ?>
     </div>
 </div>

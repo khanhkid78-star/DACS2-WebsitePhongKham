@@ -45,7 +45,8 @@ class AuthController {
                     $_SESSION['nurse_id'] = $user['nurse_id'];
                     $_SESSION['receptionist_id'] = $user['receptionist_id'];
                     $_SESSION['patient_id'] = $user['patient_id'];
-
+                    
+                    Auth::remember();
                     header('Location: ' . $this->afterLoginUrl($user['role'], $next, $doctor_id));
                     exit();
                 }
@@ -134,6 +135,8 @@ class AuthController {
 
     public function logout() {
         Auth::startSession();
+        $_SESSION = array();
+        Auth::forget();
         session_destroy();
         header("Location: /index.php");
         exit();
