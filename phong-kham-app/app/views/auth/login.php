@@ -11,6 +11,8 @@ require_once __DIR__ . '/../partials/navbar.php';
     <?php endif; ?>
 
     <form action="/index.php?action=do_login" method="POST">
+        <input type="hidden" name="next" value="<?php echo htmlspecialchars($_GET['next'] ?? ''); ?>">
+        <input type="hidden" name="doctor_id" value="<?php echo (int) ($_GET['doctor_id'] ?? 0); ?>">
         <label>
             Tên đăng nhập
             <input type="text" name="username" required>

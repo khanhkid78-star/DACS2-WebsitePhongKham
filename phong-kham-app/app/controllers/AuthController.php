@@ -27,6 +27,8 @@ class AuthController {
 
             $username = $_POST['username'];
             $password = $_POST['password'];
+            $next = isset($_POST['next']) ? $_POST['next'] : '';
+            $doctor_id = isset($_POST['doctor_id']) ? (int) $_POST['doctor_id'] : 0;
 
             $user = $userModel->findByUsername($username);
 
