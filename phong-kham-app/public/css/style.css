@@ -1,5 +1,8 @@
 body {
     margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     font-family: "Be Vietnam Pro", sans-serif;
     background: #f6f1ea;
     color: #1c2430;
@@ -12,9 +15,12 @@ h2,
 }
 
 .container {
+    flex: 1 0 auto;
+    width: 100%;
     max-width: 1140px;
     margin: 20px auto;
     padding: 0 15px;
+    box-sizing: border-box;
 }
 
 .top-header {
@@ -321,7 +327,7 @@ textarea {
 }
 
 .site-footer {
-    margin-top: 48px;
+    margin-top: auto;
     background: #06243f;
     color: #d5e2ef;
     padding: 28px 16px;
