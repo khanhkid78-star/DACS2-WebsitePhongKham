@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/../../helpers/Auth.php';
 Auth::startSession();
-$roleLabel = Auth::roleLabel($role);
 $role = Auth::getRole();
+$roleLabel = Auth::roleLabel($role);
 ?>
 <div class="top-header">
     Hotline: 0931 999 309 | Giờ làm việc: T2-T7 (7:00 - 17:00), CN (7:00 - 11:00)
