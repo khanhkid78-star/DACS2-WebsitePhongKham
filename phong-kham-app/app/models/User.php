@@ -152,5 +152,224 @@ class User {
         $stmt->execute(array(':id' => $user_id));
         return $stmt->rowCount() > 0 ? '' : 'Không xóa được.';
     }
+
+    public function findById($user_id) {
+        $stmt = $this->conn->prepare(
+            "SELECT user_id, username, role, doctor_id, nurse_id, receptionist_id, patient_id
+             FROM users WHERE user_id = :id"
+        );
+        $stmt->execute(array(':id' => $user_id));
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? $row : null;
+    }
+
+    public function accountBundle($user_id) {
+        $user = $this->findById($user_id);
+        if (!$user) {
+            return null;
+        }
+        $kind = 'admin';
+        $profile = null;
+        $map = array(
+            'patient_id' => array('patient', 'patients', 'patient_id'),
+            'doctor_id' => array('doctor', 'doctors', 'doctor_id'),
+            'nurse_id' => array('nurse', 'nurses', 'nurse_id'),
+            'receptionist_id' => array('receptionist', 'receptionists', 'receptionist_id'),
+        );
+        foreach ($map as $column => $meta) {
+            if (empty($user[$column])) {
+                continue;
+            }
+            $kind = $meta[0];
+            $stmt = $this->conn->prepare(
+                "SELECT * FROM " . $meta[1] . " WHERE " . $meta[2] . " = :id"
+            );
+            $stmt->execute(array(':id' => (int) $user[$column]));
+            $profile = $stmt->fetch(PDO::FETCH_ASSOC);
+            break;
+        }
+        return array('user' => $user, 'kind' => $kind, 'profile' => $profile);
+    }
+
+    public function updateAccount($user_id, $username, $newPassword, $input) {
+        $bundle = $this->accountBundle($user_id);
+        if (!$bundle) {
+            return 'Không thấy tài khoản.';
+        }
+        $username = trim($username);
+        if ($username === '') {
+            return 'Nhập tên đăng nhập.';
+        }
+        if ($newPassword !== '' && strlen($newPassword) < 5) {
+            return 'Mật khẩu mới tối thiểu 5 ký tự.';
+        }
+
+        $kind = $bundle['kind'];
+        $profile = $bundle['profile'];
+        $fields = array();
+        if ($profile) {
+            $error = $this->checkProfile($kind, $input);
+            if ($error !== '') {
+                return $error;
+            }
+            $fields = $this->profileFields($kind, $input);
+        }
+
+        $taken = $this->conn->prepare(
+            "SELECT user_id FROM users WHERE username = :username AND user_id <> :id"
+        );
+        $taken->execute(array(':username' => $username, ':id' => $user_id));
+        if ($taken->fetch(PDO::FETCH_ASSOC)) {
+            return 'Tên đăng nhập đã tồn tại.';
+        }
+
+        $this->conn->beginTransaction();
+        try {
+            if ($newPassword !== '') {
+                $stmt = $this->conn->prepare(
+                    "UPDATE users SET username = :username, password = :password WHERE user_id = :id"
+                );
+                $stmt->execute(array(
+                    ':username' => $username,
+                    ':password' => password_hash($newPassword, PASSWORD_DEFAULT),
+                    ':id' => $user_id,
+                ));
+            } else {
+                $stmt = $this->conn->prepare(
+                    "UPDATE users SET username = :username WHERE user_id = :id"
+                );
+                $stmt->execute(array(
+                    ':username' => $username,
+                    ':id' => $user_id,
+                ));
+            }
+
+            if ($profile && $fields) {
+                $sets = array();
+                $params = array();
+                foreach ($fields as $column => $value) {
+                    $sets[] = $column . " = :" . $column;
+                    $params[':' . $column] = $value;
+                }
+                $idColumn = array(
+                    'patient' => 'patient_id',
+                    'doctor' => 'doctor_id',
+                    'nurse' => 'nurse_id',
+                    'receptionist' => 'receptionist_id',
+                );
+                $table = array(
+                    'patient' => 'patients',
+                    'doctor' => 'doctors',
+                    'nurse' => 'nurses',
+                    'receptionist' => 'receptionists',
+                );
+                $params[':id'] = (int) $profile[$idColumn[$kind]];
+                $sql = "UPDATE " . $table[$kind] . " SET " . implode(', ', $sets)
+                    . " WHERE " . $idColumn[$kind] . " = :id";
+                $this->conn->prepare($sql)->execute($params);
+            }
+
+            $this->conn->commit();
+            return '';
+        } catch (PDOException $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            if ($e->getCode() === '23505') {
+                return 'Tên đăng nhập, số điện thoại, email hoặc CCCD đã tồn tại.';
+            }
+            return 'Không lưu được tài khoản.';
+        }
+    }
+
+    private function checkProfile($kind, $input) {
+        $gender = trim($input['gender'] ?? '');
+        if (!in_array($gender, array('Nam', 'Nữ', 'Khác'), true)) {
+            return 'Giới tính không hợp lệ.';
+        }
+        if ($kind === 'patient') {
+            foreach (array('full_name', 'date_of_birth', 'phone', 'email', 'address', 'cccd', 'bhyt') as $key) {
+                if (trim($input[$key] ?? '') === '') {
+                    return 'Điền đủ thông tin bệnh nhân.';
+                }
+            }
+            if (!preg_match('/^\d{10}$/', trim($input['phone']))) {
+                return 'Số điện thoại phải đúng 10 chữ số.';
+            }
+            if (!preg_match('/^\d{12}$/', trim($input['cccd']))) {
+                return 'CCCD phải đúng 12 chữ số.';
+            }
+            if (!preg_match('/^\d{10,15}$/', trim($input['bhyt']))) {
+                return 'Số BHYT phải từ 10 đến 15 chữ số.';
+            }
+        }
+        if ($kind === 'doctor') {
+            foreach (array('full_name', 'specialty', 'phone', 'email', 'degree') as $key) {
+                if (trim($input[$key] ?? '') === '') {
+                    return 'Điền đủ hồ sơ bác sĩ.';
+                }
+            }
+        }
+        if ($kind === 'receptionist' && (trim($input['full_name'] ?? '') === '' || trim($input['phone'] ?? '') === '')) {
+            return 'Điền đủ họ tên và số điện thoại.';
+        }
+        return '';
+    }
+
+    private function profileFields($kind, $input) {
+        $dob = trim($input['date_of_birth'] ?? '');
+        $dob = $dob === '' ? null : $dob;
+        $gender = trim($input['gender'] ?? '');
+        if ($kind === 'patient') {
+            return array(
+                'full_name' => trim($input['full_name']),
+                'date_of_birth' => $dob,
+                'gender' => $gender,
+                'phone' => trim($input['phone']),
+                'email' => trim($input['email']),
+                'address' => trim($input['address']),
+                'cccd' => trim($input['cccd']),
+                'bhyt' => trim($input['bhyt']),
+            );
+        }
+        if ($kind === 'doctor' || $kind === 'nurse') {
+            return array(
+                'full_name' => trim($input['full_name'] ?? ''),
+                'gender' => $gender,
+                'date_of_birth' => $dob,
+                'specialty' => trim($input['specialty'] ?? ''),
+                'phone' => trim($input['phone'] ?? ''),
+                'email' => trim($input['email'] ?? ''),
+                'degree' => trim($input['degree'] ?? ''),
+            );
+        }
+        return array(
+            'full_name' => trim($input['full_name'] ?? ''),
+            'gender' => $gender,
+            'date_of_birth' => $dob,
+            'phone' => trim($input['phone'] ?? ''),
+            'email' => trim($input['email'] ?? ''),
+            'address' => trim($input['address'] ?? ''),
+            'shift' => trim($input['shift'] ?? ''),
+        );
+    }
+
+    public function deleteSelf($user_id) {
+        $user = $this->findById($user_id);
+        if (!$user) {
+            return 'Không thấy tài khoản.';
+        }
+        if ($user['role'] === 'admin') {
+            $count = (int) $this->conn->query(
+                "SELECT COUNT(*) FROM users WHERE role = 'admin'"
+            )->fetchColumn();
+            if ($count <= 1) {
+                return 'Không xóa quản trị cuối cùng.';
+            }
+        }
+        $stmt = $this->conn->prepare("DELETE FROM users WHERE user_id = :id");
+        $stmt->execute(array(':id' => $user_id));
+        return $stmt->rowCount() > 0 ? '' : 'Không xóa được tài khoản.';
+    }
 }
 ?>

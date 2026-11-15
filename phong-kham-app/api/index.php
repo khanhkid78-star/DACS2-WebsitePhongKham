@@ -132,6 +132,16 @@ switch ($action) {
         (new AdminController())->deleteUser();
         break;
 
+    case 'account':
+        (new AuthController())->showAccount();
+        break;
+    case 'save_account':
+        (new AuthController())->saveAccount();
+        break;
+    case 'delete_account':
+        (new AuthController())->deleteOwnAccount();
+        break;
+
     case 'whoami':
         header('Content-Type: application/json; charset=UTF-8');
         echo json_encode(array(

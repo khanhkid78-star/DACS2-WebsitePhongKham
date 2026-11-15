@@ -142,5 +142,72 @@ class AuthController {
         header("Location: /index.php");
         exit();
     }
+
+
+        private function requireUser() {
+        Auth::startSession();
+        if (!Auth::isLoggedIn()) {
+            header('Location: /index.php?action=login');
+            exit();
+        }
+    }
+
+    public function showAccount() {
+        $this->requireUser();
+        $bundle = (new User((new Database())->getConnection()))->accountBundle((int) $_SESSION['user_id']);
+        if (!$bundle) {
+            Auth::flash('Không thấy tài khoản.');
+            header('Location: /index.php');
+            exit();
+        }
+        $accountUser = $bundle['user'];
+        $accountKind = $bundle['kind'];
+        $profile = $bundle['profile'] ? $bundle['profile'] : array();
+        require_once __DIR__ . '/../views/account/profile.php';
+    }
+
+    public function saveAccount() {
+        $this->requireUser();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /index.php?action=account');
+            exit();
+        }
+        $username = trim($_POST['username'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $message = (new User((new Database())->getConnection()))->updateAccount(
+            (int) $_SESSION['user_id'],
+            $username,
+            $password,
+            $_POST
+        );
+        if ($message === '') {
+            $_SESSION['username'] = $username;
+            Auth::remember();
+            Auth::flash('Đã cập nhật tài khoản.', true);
+        } else {
+            Auth::flash($message);
+        }
+        header('Location: /index.php?action=account');
+        exit();
+    }
+
+    public function deleteOwnAccount() {
+        $this->requireUser();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /index.php?action=account');
+            exit();
+        }
+        $message = (new User((new Database())->getConnection()))->deleteSelf((int) $_SESSION['user_id']);
+        if ($message !== '') {
+            Auth::flash($message);
+            header('Location: /index.php?action=account');
+            exit();
+        }
+        $_SESSION = array();
+        Auth::forget();
+        session_destroy();
+        header('Location: /index.php?deleted=1');
+        exit();
+    }
 }
 ?>

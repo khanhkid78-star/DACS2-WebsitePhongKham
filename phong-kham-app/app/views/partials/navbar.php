@@ -2,7 +2,6 @@
 require_once __DIR__ . '/../../helpers/Auth.php';
 Auth::startSession();
 $role = Auth::getRole();
-$roleLabel = Auth::roleLabel($role);
 ?>
 <div class="top-header">
     Hotline: 0931 999 309 | Giờ làm việc: T2-T7 (7:00 - 17:00), CN (7:00 - 11:00)
@@ -23,7 +22,7 @@ $roleLabel = Auth::roleLabel($role);
 
         <?php if ($role === 'patient'): ?>
             <!-- Menu dành cho Bệnh nhân -->
-            <a href="/index.php?action=booking" class="btn-booking">Đặt Lịch Khám</a>
+            <a href="/index.php?action=booking">Đặt lịch khám</a>
             <a href="/index.php?action=my_appointments">Lịch Hẹn Của Tôi</a>
             <a href="/index.php?action=my_appointments#ho-so">Bệnh án</a>
             <a href="/index.php?action=my_appointments#hoa-don">Hóa đơn</a>
@@ -51,13 +50,13 @@ $roleLabel = Auth::roleLabel($role);
         <?php endif; ?>
 
         <?php if (Auth::isLoggedIn()): ?>
-            <span class="role-chip"><?php echo htmlspecialchars((string) $roleLabel); ?></span>
+            <a href="/index.php?action=account">Tài khoản</a>
             <span class="nav-user"><?php echo htmlspecialchars((string) ($_SESSION['username'] ?? '')); ?></span>
-            <a href="/index.php?action=logout" class="btn-logout">Đăng xuất</a>
-                <?php else: ?>
-            <a href="/index.php?action=login&next=booking" data-open="login">Đăng nhập</a>
-            <a href="/index.php?action=register" data-open="register">Đăng ký</a>
-            <a href="/index.php?action=booking" class="btn-booking">Đặt Lịch Khám</a>
+            <a href="/index.php?action=logout" class="nav-logout">Đăng xuất</a>
+        <?php else: ?>
+            <a class="nav-login" href="/index.php?action=login&next=booking" data-open="login">Đăng nhập</a>
+            <a class="nav-register" href="/index.php?action=register" data-open="register">Đăng ký</a>
+            <a href="/index.php?action=booking">Đặt lịch khám</a>
         <?php endif; ?>
     </div>
 </div>
@@ -126,6 +125,10 @@ $roleLabel = Auth::roleLabel($role);
 <?php endif; ?>
 
 <div class="container">
+<?php if (isset($_GET['deleted'])): ?>
+    <p class="alert alert-ok">Đã xóa tài khoản.</p>
+<?php endif; ?>
+
 <?php if (!empty($_SESSION['flash'])): ?>
     <p class="alert<?php echo !empty($_SESSION['flash_ok']) ? ' alert-ok' : ''; ?>">
         <?php echo htmlspecialchars((string) $_SESSION['flash']); ?>
