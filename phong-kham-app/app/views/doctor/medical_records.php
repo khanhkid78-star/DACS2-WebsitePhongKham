@@ -67,7 +67,13 @@ require_once __DIR__ . '/../partials/navbar.php';
 
         <p class="lead">Đơn thuốc, bỏ trống nếu chưa kê.</p>
         <div id="rx-lines">
+                    <p class="lead">Đơn thuốc, bỏ trống nếu chưa kê. Tick dòng rồi bấm xóa.</p>
+        <div id="rx-lines">
             <div class="rx-line" data-line>
+                <label class="rx-check">
+                    <input type="checkbox" data-line-check>
+                    Chọn
+                </label>
                 <label>
                     Thuốc
                     <select name="medicine_id[]">
@@ -94,8 +100,9 @@ require_once __DIR__ . '/../partials/navbar.php';
                 </label>
             </div>
         </div>
-        <p>
+        <p class="actions">
             <button class="btn-ghost" type="button" data-add-line>Thêm dòng thuốc</button>
+            <button class="btn-logout" type="button" data-remove-line>Xóa dòng đã chọn</button>
         </p>
         <p>
             <button class="btn-navy" type="submit">Lưu bệnh án</button>

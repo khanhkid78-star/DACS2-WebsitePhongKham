@@ -8,4 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/style.css">
 </head>
-<body>
+<?php
+require_once __DIR__ . '/../../helpers/Auth.php';
+Auth::startSession();
+?>
+<body data-user="<?php echo (int) ($_SESSION['user_id'] ?? 0); ?>">

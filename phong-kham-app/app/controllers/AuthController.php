@@ -46,6 +46,7 @@ class AuthController {
                     $_SESSION['receptionist_id'] = $user['receptionist_id'];
                     $_SESSION['patient_id'] = $user['patient_id'];
                     
+                    session_regenerate_id(true);
                     Auth::remember();
                     header('Location: ' . $this->afterLoginUrl($user['role'], $next, $doctor_id));
                     exit();

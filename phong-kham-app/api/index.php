@@ -31,6 +31,16 @@ Auth::startSession();
 
 $action = isset($_GET['action']) ? $_GET['action'] : 'home';
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['posted_user_id'])) {
+    $postedUser = (int) $_POST['posted_user_id'];
+    $currentUser = (int) ($_SESSION['user_id'] ?? 0);
+    if ($postedUser !== $currentUser) {
+        Auth::flash('Tài khoản trên trình duyệt vừa đổi. Hãy tải lại rồi thao tác lại.');
+        header('Location: /index.php');
+        exit();
+    }
+}
+
 switch ($action) {
 
     case 'login':
@@ -121,6 +131,14 @@ switch ($action) {
     case 'delete_user':
         (new AdminController())->deleteUser();
         break;
+
+    case 'whoami':
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(array(
+            'user_id' => (int) ($_SESSION['user_id'] ?? 0),
+            'role' => (string) ($_SESSION['role'] ?? ''),
+        ));
+        exit();
 
     default:
         header('Location: /index.php?action=home');

@@ -113,9 +113,23 @@ class Auth {
         ));
     }
 
-    public static function forget() {
-        setcookie(self::COOKIE, '', time() - 3600, '/');
-        setcookie(session_name(), '', time() - 3600, '/');
+        public static function forget() {
+        $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+        setcookie(self::COOKIE, '', array(
+            'expires' => time() - 3600,
+            'path' => '/',
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ));
+        setcookie(session_name(), '', array(
+            'expires' => time() - 3600,
+            'path' => '/',
+            'secure' => $secure,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ));
     }
 
     private static function restoreFromCookie() {

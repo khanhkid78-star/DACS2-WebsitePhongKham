@@ -118,7 +118,9 @@ if (addLine) {
         }
         var copy = row.cloneNode(true);
         copy.querySelectorAll("input, select, textarea").forEach(function (field) {
-            if (field.tagName === "SELECT") {
+            if (field.type === "checkbox") {
+                field.checked = false;
+            } else if (field.tagName === "SELECT") {
                 field.selectedIndex = 0;
             } else {
                 field.value = "";
@@ -151,3 +153,73 @@ if (rolePick) {
     rolePick.addEventListener("change", syncRole);
     syncRole();
 }
+
+var removeLine = document.querySelector("[data-remove-line]");
+if (removeLine) {
+    removeLine.addEventListener("click", function () {
+        var box = document.getElementById("rx-lines");
+        if (!box) {
+            return;
+        }
+        var rows = Array.prototype.slice.call(box.querySelectorAll("[data-line]"));
+        var picked = rows.filter(function (row) {
+            var tick = row.querySelector("[data-line-check]");
+            return tick && tick.checked;
+        });
+        if (!picked.length) {
+            alert("Chọn ít nhất một dòng thuốc.");
+            return;
+        }
+        if (picked.length >= rows.length) {
+            picked.forEach(function (row, index) {
+                if (index === 0) {
+                    row.querySelectorAll("input, select, textarea").forEach(function (field) {
+                        if (field.type === "checkbox") {
+                            field.checked = false;
+                        } else if (field.tagName === "SELECT") {
+                            field.selectedIndex = 0;
+                        } else {
+                            field.value = "";
+                        }
+                    });
+                } else {
+                    row.remove();
+                }
+            });
+            return;
+        }
+        picked.forEach(function (row) {
+            row.remove();
+        });
+    });
+}
+
+document.addEventListener("submit", function (event) {
+    var form = event.target;
+    if (!form || form.tagName !== "FORM") {
+        return;
+    }
+    var field = form.querySelector("input[name=posted_user_id]");
+    if (!field) {
+        field = document.createElement("input");
+        field.type = "hidden";
+        field.name = "posted_user_id";
+        form.appendChild(field);
+    }
+    field.value = document.body.getAttribute("data-user") || "0";
+});
+
+document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState !== "visible") {
+        return;
+    }
+    var mine = document.body.getAttribute("data-user") || "0";
+    fetch("/index.php?action=whoami", { credentials: "same-origin", cache: "no-store" })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (String(data.user_id) !== String(mine)) {
+                window.location.reload();
+            }
+        })
+        .catch(function () {});
+});

@@ -574,16 +574,31 @@ button { font: inherit; }
 
 .rx-line {
     display: grid;
-    grid-template-columns: 1.5fr 0.7fr 0.8fr 1.2fr;
+    grid-template-columns: auto 1.5fr 0.7fr 0.8fr 1.2fr;
     gap: 10px;
+    align-items: end;
     margin-top: 8px;
+}
+
+.rx-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 10px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.rx-check input {
+    width: auto;
+    margin: 0;
 }
 
 .rx-line label { margin-top: 0; }
 
 td form {
-    display: inline-block;
-    margin: 0 6px 6px 0;
+    display: block;
+    margin: 0 0 6px;
 }
 
 td .btn-navy,
@@ -591,9 +606,19 @@ td .btn-ghost,
 td .btn-logout {
     padding: 6px 10px;
     font-size: 13px;
+    text-align: center;
 }
 
-.table-wrap td { overflow-wrap: anywhere; }
+td .btn-navy:hover,
+td .btn-ghost:hover,
+td .btn-logout:hover,
+td .btn-navy:active,
+td .btn-ghost:active,
+td .btn-logout:active {
+    transform: none;
+    box-shadow: none;
+}
+
 
 input:focus,
 select:focus,
@@ -744,4 +769,28 @@ body.modal-lock { overflow: hidden; }
         animation: none;
         transition: none;
     }
+}
+
+.badge,
+.role-chip,
+.btn-navy,
+.btn-ghost,
+.btn-booking,
+.btn-logout {
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.table-wrap th,
+.table-wrap td {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.navbar-brand {
+    flex: 0 0 auto;
+}
+
+.nav-links {
+    margin-left: auto;
 }
