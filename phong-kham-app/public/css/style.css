@@ -72,14 +72,17 @@ h2,
 }
 
 .nav-links a {
-    color: #8aa0b8;
+    color: #1c2430;
     font-weight: 600;
     text-decoration: none;
-    transition: color .18s ease, background-color .18s ease;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background-color .18s ease;
 }
 
 .nav-links a:hover {
-    color: #06243f;
+    color: #1c2430;
+    background: #f8e7d6;
 }
 
 .nav-user {
