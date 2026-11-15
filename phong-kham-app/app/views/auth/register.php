@@ -71,7 +71,7 @@ require_once __DIR__ . '/../partials/navbar.php';
             <button class="btn-navy" type="submit">Tạo tài khoản</button>
         </p>
     </form>
-    <p class="lead">Đã có tài khoản? <a href="/index.php?action=login&next=booking">Đăng nhập</a></p>
+    <p class="lead">Đã có tài khoản? <a href="/index.php?action=login&next=booking" data-open="login">Đăng nhập</a></p>
 </div>
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>

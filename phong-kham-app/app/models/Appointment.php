@@ -56,5 +56,58 @@ class Appointment {
         $stmt->bindParam(":id", $appointment_id, PDO::PARAM_INT);
         return $stmt->execute();
     }
+
+        public function cancelOwn($appointment_id, $patient_id) {
+        $query = "UPDATE " . $this->table_name . "
+                  SET status = 'Cancelled'
+                  WHERE appointment_id = :id
+                    AND patient_id = :patient_id
+                    AND status = 'Pending'";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute(array(
+            ':id' => $appointment_id,
+            ':patient_id' => $patient_id,
+        ));
+        return $stmt->rowCount() > 0;
+    }
+
+    public function getOpenForRecord($doctor_id) {
+        $sql = "SELECT a.appointment_id, a.appointment_date, a.note, a.patient_id, a.doctor_id,
+                       p.full_name AS patient_name, d.full_name AS doctor_name
+                FROM " . $this->table_name . " a
+                JOIN patients p ON p.patient_id = a.patient_id
+                JOIN doctors d ON d.doctor_id = a.doctor_id
+                WHERE a.status = 'Scheduled'
+                AND NOT EXISTS (
+                    SELECT 1 FROM medical_records m WHERE m.appointment_id = a.appointment_id
+                )";
+        $params = array();
+        if ($doctor_id !== null) {
+            $sql .= " AND a.doctor_id = :doctor_id";
+            $params[':doctor_id'] = $doctor_id;
+        }
+        $sql .= " ORDER BY a.appointment_date ASC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function findScheduled($appointment_id, $doctor_id) {
+        $sql = "SELECT a.appointment_id, a.appointment_date, a.note, a.patient_id, a.doctor_id,
+                       p.full_name AS patient_name, d.full_name AS doctor_name
+                FROM " . $this->table_name . " a
+                JOIN patients p ON p.patient_id = a.patient_id
+                JOIN doctors d ON d.doctor_id = a.doctor_id
+                WHERE a.appointment_id = :id AND a.status = 'Scheduled'";
+        $params = array(':id' => $appointment_id);
+        if ($doctor_id !== null) {
+            $sql .= " AND a.doctor_id = :doctor_id";
+            $params[':doctor_id'] = $doctor_id;
+        }
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? $row : null;
+    }
 }
 ?>

@@ -40,17 +40,17 @@ $prices = array(
                 <a class="btn-ghost" href="/index.php?action=my_appointments">Lịch của tôi</a>
             </div>
         <?php elseif ($role === 'doctor'): ?>
-            <p class="lead">Bạn xem hồ sơ bệnh án. Không có quyền duyệt lịch hay sửa kho thuốc.</p>
+            <p class="lead">Bạn ghi bệnh án và kê đơn cho lịch đã duyệt. Không duyệt lịch, không sửa kho thuốc.</p>
             <div class="actions">
                 <a class="btn-navy" href="/index.php?action=doctor_records">Mở hồ sơ bệnh án</a>
             </div>
         <?php elseif ($role === 'nurse'): ?>
-            <p class="lead">Bạn quản lý kho thuốc. Đặt lịch và hóa đơn không thuộc quyền này.</p>
+            <p class="lead">Bạn thêm, sửa và xóa thuốc trong kho. Đặt lịch và hóa đơn không thuộc quyền này.</p>
             <div class="actions">
                 <a class="btn-navy" href="/index.php?action=nurse_medicines">Mở kho thuốc</a>
             </div>
         <?php elseif ($role === 'receptionist'): ?>
-            <p class="lead">Bạn duyệt lịch hẹn và xem hóa đơn. Bệnh nhân tự đặt sau khi đăng nhập.</p>
+            <p class="lead">Bạn duyệt lịch, đánh dấu đã khám và lập hóa đơn. Bệnh nhân tự đặt sau khi đăng nhập.</p>
             <div class="actions">
                 <a class="btn-navy" href="/index.php?action=receptionist_appointments">Duyệt lịch hẹn</a>
                 <a class="btn-ghost" href="/index.php?action=invoices">Hóa đơn</a>
@@ -62,6 +62,7 @@ $prices = array(
                 <a class="btn-ghost" href="/index.php?action=receptionist_appointments">Lịch hẹn</a>
                 <a class="btn-ghost" href="/index.php?action=doctor_records">Bệnh án</a>
                 <a class="btn-ghost" href="/index.php?action=invoices">Hóa đơn</a>
+                <a class="btn-ghost" href="/index.php?action=nurse_medicines">Kho thuốc</a>
             </div>
         <?php endif; ?>
     </section>

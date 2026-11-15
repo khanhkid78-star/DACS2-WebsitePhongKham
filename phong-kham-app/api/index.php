@@ -94,6 +94,34 @@ switch ($action) {
         require __DIR__ . '/../app/views/home.php';
         break;
 
+        case 'cancel_appointment':
+        (new BookingController())->cancel();
+        break;
+    case 'save_record':
+        (new RecordController())->save();
+        break;
+    case 'update_record':
+        (new RecordController())->update();
+        break;
+    case 'save_medicine':
+        (new MedicineController())->save();
+        break;
+    case 'delete_medicine':
+        (new MedicineController())->delete();
+        break;
+    case 'create_invoice':
+        (new InvoiceController())->create();
+        break;
+    case 'pay_invoice':
+        (new InvoiceController())->pay();
+        break;
+    case 'save_user':
+        (new AdminController())->saveUser();
+        break;
+    case 'delete_user':
+        (new AdminController())->deleteUser();
+        break;
+
     default:
         header('Location: /index.php?action=home');
         exit();

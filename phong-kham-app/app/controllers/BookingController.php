@@ -50,7 +50,8 @@ class BookingController {
         }
 
         if ($this->appointmentModel->create($patient_id, $doctor_id, $appointment_date, $note)) {
-            header('Location: /index.php?action=my_appointments&booked=1');
+            Auth::flash('Đã gửi yêu cầu. Lễ tân sẽ gọi xác nhận.', true);
+            header('Location: /index.php?action=my_appointments');
             exit();
         }
 
@@ -80,13 +81,20 @@ class BookingController {
         return (int) $insert->fetchColumn();
     }
 
-    public function myAppointments() {
+        public function myAppointments() {
         Auth::checkRole(array('patient', 'admin'));
-        $patient_id = !empty($_SESSION['patient_id'])
-            ? (int) $_SESSION['patient_id']
-            : 0;
+        require_once __DIR__ . '/../models/MedicalRecord.php';
+        require_once __DIR__ . '/../models/Invoice.php';
+
+        $patient_id = !empty($_SESSION['patient_id']) ? (int) $_SESSION['patient_id'] : 0;
         $my_appointments = $patient_id
             ? $this->appointmentModel->getByPatientId($patient_id)
+            : array();
+        $my_records = $patient_id
+            ? (new MedicalRecord($this->db))->getList(null, $patient_id)
+            : array();
+        $my_invoices = $patient_id
+            ? (new Invoice($this->db))->getByPatientId($patient_id)
             : array();
         require_once __DIR__ . '/../views/patient/my_appointments.php';
     }
@@ -111,9 +119,28 @@ class BookingController {
 
         if ($id > 0 && in_array($status, $allowed, true)) {
             $this->appointmentModel->updateStatus($id, $status);
+            Auth::flash('Đã cập nhật trạng thái lịch hẹn.', true);
         }
 
         header('Location: /index.php?action=receptionist_appointments');
+        exit();
+    }
+
+
+        public function cancel() {
+        Auth::checkRole(array('patient'));
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /index.php?action=my_appointments');
+            exit();
+        }
+        $id = (int) ($_POST['appointment_id'] ?? 0);
+        $patient_id = (int) ($_SESSION['patient_id'] ?? 0);
+        if ($this->appointmentModel->cancelOwn($id, $patient_id)) {
+            Auth::flash('Đã hủy lịch đang chờ duyệt.', true);
+        } else {
+            Auth::flash('Không hủy được. Chỉ hủy lịch đang chờ duyệt của bạn.');
+        }
+        header('Location: /index.php?action=my_appointments');
         exit();
     }
 }

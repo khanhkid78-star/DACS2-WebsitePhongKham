@@ -141,5 +141,11 @@ class Auth {
         $_SESSION['receptionist_id'] = $data['receptionist_id'];
         $_SESSION['patient_id'] = $data['patient_id'];
     }
+
+        public static function flash($message, $ok = false) {
+        self::startSession();
+        $_SESSION['flash'] = $message;
+        $_SESSION['flash_ok'] = $ok ? 1 : 0;
+    }
 }
 ?>

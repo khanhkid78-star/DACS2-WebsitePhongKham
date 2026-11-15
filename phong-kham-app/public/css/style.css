@@ -562,3 +562,186 @@ h1 {
 .role-dash h2 {
     margin-top: 6px;
 }
+
+button { font: inherit; }
+
+.is-hidden { display: none !important; }
+
+.form-wide {
+    max-width: 980px;
+    margin-bottom: 22px;
+}
+
+.rx-line {
+    display: grid;
+    grid-template-columns: 1.5fr 0.7fr 0.8fr 1.2fr;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.rx-line label { margin-top: 0; }
+
+td form {
+    display: inline-block;
+    margin: 0 6px 6px 0;
+}
+
+td .btn-navy,
+td .btn-ghost,
+td .btn-logout {
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+.table-wrap td { overflow-wrap: anywhere; }
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #0a3a6b;
+    box-shadow: 0 0 0 3px rgba(10, 58, 107, 0.15);
+}
+
+.btn-navy,
+.btn-ghost,
+.btn-booking,
+.btn-logout,
+.nav-toggle,
+.modal-tabs button,
+.modal-x {
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+}
+
+.btn-navy:hover,
+.btn-booking:hover,
+.btn-logout:hover,
+.btn-ghost:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(6, 36, 63, .14);
+}
+
+.btn-navy:active,
+.btn-booking:active,
+.btn-logout:active,
+.btn-ghost:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.specialty,
+.doctor,
+.role-dash {
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.specialty:hover,
+.doctor:hover,
+.role-dash:hover,
+.specialty.reveal.is-in:hover,
+.doctor.reveal.is-in:hover,
+.role-dash.reveal.is-in:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(6, 36, 63, 0.1);
+}
+
+table tr:hover td { background: #f8f1ea; }
+
+.alert-ok {
+    background: #d9ead3;
+    color: #1e5b32;
+}
+
+.alert,
+.table-wrap {
+    animation: pageIn .4s ease;
+}
+
+@keyframes pageIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+}
+
+body.modal-lock { overflow: hidden; }
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: none;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: auto;
+    padding: 32px 16px;
+    background: rgba(6, 36, 63, 0.55);
+}
+
+.modal.is-open { display: flex; }
+
+.modal-card {
+    position: relative;
+    width: min(760px, 100%);
+    margin-top: 24px;
+    padding: 20px;
+    border: 1px solid #e4dcd0;
+    border-radius: 16px;
+    background: #fffdf8;
+    box-shadow: 0 24px 60px rgba(6, 36, 63, 0.28);
+    animation: popIn .28s ease;
+}
+
+@keyframes popIn {
+    from { opacity: 0; transform: translateY(16px) scale(.98); }
+    to { opacity: 1; transform: none; }
+}
+
+.modal-x {
+    float: right;
+    border: 0;
+    background: transparent;
+    color: #0a3a6b;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.modal-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 28px 0 8px;
+}
+
+.modal-tabs button {
+    border: 1px solid #e4dcd0;
+    border-radius: 8px;
+    background: #fffdf8;
+    color: #0a3a6b;
+    padding: 8px 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.modal-tabs button.is-on {
+    border-color: #0a3a6b;
+    background: #0a3a6b;
+    color: #fffdf8;
+}
+
+@media (max-width: 800px) {
+    .rx-line { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .alert,
+    .table-wrap,
+    .modal-card,
+    .btn-navy,
+    .btn-booking,
+    .btn-ghost,
+    .btn-logout,
+    .specialty,
+    .doctor,
+    .role-dash {
+        animation: none;
+        transition: none;
+    }
+}
