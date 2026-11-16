@@ -11,6 +11,10 @@ require_once __DIR__ . '/../partials/navbar.php';
 </div>
 <p class="lead">Chỉ hủy được lịch đang chờ duyệt.</p>
 
+<label class="mine-search">Tìm của tôi
+    <input type="search" id="mine-filter" placeholder="Bác sĩ, triệu chứng, mã hóa đơn">
+</label>
+
 <?php if (empty($my_appointments)): ?>
     <div class="card">
         <p class="lead">Bạn chưa đăng ký lịch khám nào.</p>
@@ -28,6 +32,7 @@ require_once __DIR__ . '/../partials/navbar.php';
             <th>Trạng thái</th>
             <th>Thao tác</th>
         </tr>
+        <tbody id="mine-appts">
         <?php foreach ($my_appointments as $app): ?>
         <tr>
             <td>#<?php echo (int) $app['appointment_id']; ?></td>
@@ -58,6 +63,7 @@ require_once __DIR__ . '/../partials/navbar.php';
             </td>
         </tr>
         <?php endforeach; ?>
+        </tbody>
     </table>
     </div>
 <?php endif; ?>
@@ -77,6 +83,7 @@ require_once __DIR__ . '/../partials/navbar.php';
                 <th>Kết luận</th>
                 <th>Đơn thuốc</th>
             </tr>
+            <tbody id="mine-records">
             <?php foreach ($my_records as $rec): ?>
             <tr>
                 <td><?php echo date('H:i d/m/Y', strtotime($rec['visit_date'])); ?></td>
@@ -87,6 +94,7 @@ require_once __DIR__ . '/../partials/navbar.php';
                 <td><?php echo $rec['prescription_text'] ? htmlspecialchars($rec['prescription_text']) : 'Chưa kê'; ?></td>
             </tr>
             <?php endforeach; ?>
+            </tbody>
         </table>
         </div>
     <?php endif; ?>
@@ -106,6 +114,7 @@ require_once __DIR__ . '/../partials/navbar.php';
                 <th>Trạng thái</th>
                 <th>Ngày tạo</th>
             </tr>
+            <tbody id="mine-invoices">
             <?php foreach ($my_invoices as $inv): ?>
             <tr>
                 <td>#<?php echo (int) $inv['invoice_id']; ?></td>
@@ -121,6 +130,7 @@ require_once __DIR__ . '/../partials/navbar.php';
                 <td><?php echo date('d/m/Y H:i', strtotime($inv['created_at'])); ?></td>
             </tr>
             <?php endforeach; ?>
+            </tbody>
         </table>
         </div>
     <?php endif; ?>

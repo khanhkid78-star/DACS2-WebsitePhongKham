@@ -11,7 +11,7 @@ class MedicalRecord {
         return $this->getList(null, null);
     }
 
-    public function getList($doctor_id, $patient_id) {
+    public function getList($doctor_id, $patient_id, $q = '') {
         $sql = "SELECT m.record_id, m.patient_id, m.doctor_id, m.appointment_id,
                        m.visit_date, m.symptoms, m.diagnosis, m.conclusion,
                        COALESCE(m.patient_name, p.full_name) AS patient_name,
@@ -36,6 +36,19 @@ class MedicalRecord {
             $sql .= " AND m.patient_id = :patient_id";
             $params[':patient_id'] = $patient_id;
         }
+
+        if ($q !== '') {
+            $sql .= " AND (
+                COALESCE(m.patient_name, p.full_name, '') ILIKE :q
+                OR COALESCE(m.doctor_name, d.full_name, '') ILIKE :q
+                OR COALESCE(m.diagnosis, '') ILIKE :q
+                OR COALESCE(m.symptoms, '') ILIKE :q
+                OR CAST(m.record_id AS TEXT) = :exact
+            )";
+            $params[':q'] = '%' . $q . '%';
+            $params[':exact'] = $q;
+        }
+
         $sql .= " ORDER BY m.visit_date DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);

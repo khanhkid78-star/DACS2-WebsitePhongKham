@@ -3,73 +3,81 @@ require_once __DIR__ . '/../../helpers/Auth.php';
 Auth::checkRole(array('receptionist', 'admin'));
 require_once __DIR__ . '/../partials/header.php';
 require_once __DIR__ . '/../partials/navbar.php';
-
-$statusLabel = array(
-    'Pending' => array('Chờ duyệt', 'badge-pending'),
-    'Scheduled' => array('Đã lên lịch', 'badge-ok'),
-    'Completed' => array('Đã khám xong', 'badge-done'),
-    'Cancelled' => array('Đã hủy', 'badge-cancel'),
-);
 ?>
 
-<h2>Duyệt lịch hẹn</h2>
-<p class="lead">Lịch chờ thì duyệt hoặc hủy. Lịch đã lên lịch thì đánh dấu đã khám, hoặc hủy.</p>
+<div class="page-head">
+    <div>
+        <h2>Lịch hẹn</h2>
+        <p class="lead">Gõ để lọc. Bấm Sửa trên đúng dòng cần đổi giờ, bác sĩ, triệu chứng hoặc trạng thái.</p>
+    </div>
+</div>
 
-<div class="table-wrap">
+<form class="filters" id="appt-filters">
+    <label>Tìm kiếm
+        <input type="search" name="q" placeholder="Tên, số điện thoại, mã">
+    </label>
+    <label>Trạng thái
+        <select name="status">
+            <option value="">Tất cả</option>
+            <option value="Pending">Chờ duyệt</option>
+            <option value="Scheduled">Đã lên lịch</option>
+            <option value="Completed">Đã khám xong</option>
+            <option value="Cancelled">Đã hủy</option>
+        </select>
+    </label>
+    <label>Bác sĩ
+        <select name="doctor_id">
+            <option value="0">Tất cả</option>
+            <?php foreach ($doctors as $doc): ?>
+                <option value="<?php echo (int) $doc['doctor_id']; ?>"><?php echo htmlspecialchars((string) $doc['full_name']); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </label>
+</form>
+
+<div class="table-wrap list-scroll">
 <table>
-    <tr>
-        <th>Mã</th>
-        <th>Bệnh nhân</th>
-        <th>SĐT</th>
-        <th>Bác sĩ</th>
-        <th>Ngày giờ</th>
-        <th>Triệu chứng</th>
-        <th>Trạng thái</th>
-        <th>Thao tác</th>
-    </tr>
-    <?php if (empty($appointments)): ?>
-        <tr><td colspan="8">Chưa có lịch hẹn.</td></tr>
-    <?php endif; ?>
-    <?php foreach ($appointments as $app): ?>
-    <?php $st = isset($statusLabel[$app['status']]) ? $statusLabel[$app['status']] : array($app['status'], 'badge-cancel'); ?>
-    <tr>
-        <td>#<?php echo (int) $app['appointment_id']; ?></td>
-        <td><?php echo htmlspecialchars((string) $app['patient_name']); ?></td>
-        <td><?php echo htmlspecialchars((string) $app['patient_phone']); ?></td>
-        <td><?php echo htmlspecialchars((string) $app['doctor_name']); ?></td>
-        <td><?php echo date('H:i d/m/Y', strtotime($app['appointment_date'])); ?></td>
-        <td><?php echo htmlspecialchars((string) $app['note']); ?></td>
-        <td><span class="badge <?php echo $st[1]; ?>"><?php echo htmlspecialchars((string) $st[0]); ?></span></td>
-        <td>
-            <?php if ($app['status'] === 'Pending'): ?>
-                <form action="/index.php?action=update_appointment_status" method="POST">
-                    <input type="hidden" name="id" value="<?php echo (int) $app['appointment_id']; ?>">
-                    <input type="hidden" name="status" value="Scheduled">
-                    <button class="btn-navy" type="submit">Duyệt lịch</button>
-                </form>
-                <form action="/index.php?action=update_appointment_status" method="POST">
-                    <input type="hidden" name="id" value="<?php echo (int) $app['appointment_id']; ?>">
-                    <input type="hidden" name="status" value="Cancelled">
-                    <button class="btn-ghost" type="submit">Hủy</button>
-                </form>
-            <?php elseif ($app['status'] === 'Scheduled'): ?>
-                <form action="/index.php?action=update_appointment_status" method="POST">
-                    <input type="hidden" name="id" value="<?php echo (int) $app['appointment_id']; ?>">
-                    <input type="hidden" name="status" value="Completed">
-                    <button class="btn-navy" type="submit">Đã khám</button>
-                </form>
-                <form action="/index.php?action=update_appointment_status" method="POST">
-                    <input type="hidden" name="id" value="<?php echo (int) $app['appointment_id']; ?>">
-                    <input type="hidden" name="status" value="Cancelled">
-                    <button class="btn-ghost" type="submit">Hủy</button>
-                </form>
-            <?php else: ?>
-                <span>Đã xử lý</span>
-            <?php endif; ?>
-        </td>
-    </tr>
-    <?php endforeach; ?>
+    <thead>
+        <tr>
+            <th>Mã</th><th>Bệnh nhân</th><th>SĐT</th><th>Bác sĩ</th><th>Ngày giờ</th><th>Triệu chứng</th><th>Trạng thái</th><th></th>
+        </tr>
+    </thead>
+    <tbody id="appt-body">
+        <?php require __DIR__ . '/_appointment_rows.php'; ?>
+    </tbody>
 </table>
+</div>
+
+<div class="modal" id="appt-modal">
+    <div class="modal-card">
+        <button class="modal-x" type="button" data-close-box>Đóng</button>
+        <h2>Sửa lịch #<span id="appt-label"></span></h2>
+        <form action="/index.php?action=update_appointment" method="POST">
+            <input type="hidden" name="id" id="appt-id">
+            <label>Bác sĩ
+                <select name="doctor_id" id="appt-doctor" required>
+                    <?php foreach ($doctors as $doc): ?>
+                        <option value="<?php echo (int) $doc['doctor_id']; ?>"><?php echo htmlspecialchars((string) $doc['full_name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>Ngày giờ
+                <input type="datetime-local" name="appointment_date" id="appt-date" required>
+            </label>
+            <label>Triệu chứng
+                <textarea name="note" id="appt-note" rows="3" required></textarea>
+            </label>
+            <label>Trạng thái
+                <select name="status" id="appt-status">
+                    <option value="Pending">Chờ duyệt</option>
+                    <option value="Scheduled">Đã lên lịch</option>
+                    <option value="Completed">Đã khám xong</option>
+                    <option value="Cancelled">Đã hủy</option>
+                </select>
+            </label>
+            <p><button class="btn-navy" type="submit">Lưu dòng này</button></p>
+        </form>
+    </div>
 </div>
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>

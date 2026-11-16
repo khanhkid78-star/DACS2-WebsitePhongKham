@@ -30,6 +30,11 @@ class RecordController {
             $openAppointments = $bag['appointments']->getOpenForRecord($filter);
         }
 
+        $doctors = array();
+        if ($role === 'admin') {
+            $doctors = (new Database())->getConnection()->query("SELECT doctor_id, full_name FROM doctors ORDER BY full_name")->fetchAll(PDO::FETCH_ASSOC);
+        }
+
         $medicines = $bag['medicines']->getAll();
         $editRecord = null;
         $editId = isset($_GET['edit']) ? (int) $_GET['edit'] : 0;
@@ -59,6 +64,7 @@ class RecordController {
         $symptoms = trim($_POST['symptoms'] ?? '');
         $diagnosis = trim($_POST['diagnosis'] ?? '');
         $conclusion = trim($_POST['conclusion'] ?? '');
+
         if ($appointmentId < 1 || $symptoms === '' || $diagnosis === '' || $conclusion === '') {
             Auth::flash('Chọn lịch và điền triệu chứng, chẩn đoán, kết luận.');
             header('Location: /index.php?action=doctor_records');
@@ -68,6 +74,7 @@ class RecordController {
         $bag = $this->bag();
         $filter = ($role === 'doctor') ? $doctorId : null;
         $appointment = $bag['appointments']->findScheduled($appointmentId, $filter);
+
         if (!$appointment) {
             Auth::flash('Lịch này chưa được duyệt, hoặc không thuộc bạn.');
             header('Location: /index.php?action=doctor_records');
@@ -100,7 +107,18 @@ class RecordController {
                 'diagnosis' => $diagnosis,
                 'conclusion' => $conclusion,
             ), $clean);
+
             if ($recordId) {
+                require_once __DIR__ . '/../helpers/Notify.php';
+                Notify::send(
+                    (new Database())->getConnection(),
+                    'patient',
+                    (int) $appointment['patient_id'],
+                    'Đã có bệnh án',
+                    'Bệnh án với BS. ' . $appointment['doctor_name'] . ' đã được lưu.',
+                    '/index.php?action=my_appointments#ho-so'
+                );
+
                 Auth::flash('Đã lưu bệnh án. Lịch chuyển sang đã khám xong.', true);
             } else {
                 Auth::flash('Lịch này đã có bệnh án.');
@@ -145,6 +163,24 @@ class RecordController {
             Auth::flash('Không sửa được bệnh án này.');
         }
         header('Location: /index.php?action=doctor_records');
+        exit();
+    }
+
+
+    public function rows() {
+        Auth::checkRole(array('doctor', 'admin'));
+        $bag = $this->bag();
+        $role = Auth::getRole();
+        $doctorId = (int) ($_SESSION['doctor_id'] ?? 0);
+        $filter = ($role === 'doctor') ? $doctorId : null;
+        $picked = (int) ($_GET['doctor_id'] ?? 0);
+        if ($role === 'admin' && $picked > 0) {
+            $filter = $picked;
+        }
+        $records = ($role === 'doctor' && $doctorId < 1)
+            ? array()
+            : $bag['records']->getList($filter, null, trim($_GET['q'] ?? ''));
+        require __DIR__ . '/../views/doctor/_record_rows.php';
         exit();
     }
 

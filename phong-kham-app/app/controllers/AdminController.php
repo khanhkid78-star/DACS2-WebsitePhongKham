@@ -84,4 +84,61 @@ class AdminController {
         header('Location: /index.php?action=admin_users');
         exit();
     }
+
+        public function showStats() {
+        Auth::checkRole(array('admin'));
+        $staff = $this->model()['db']->query(
+            "SELECT
+                (SELECT COUNT(*) FROM doctors) AS doctors,
+                (SELECT COUNT(*) FROM nurses) AS nurses,
+                (SELECT COUNT(*) FROM receptionists) AS receptionists,
+                (SELECT COUNT(*) FROM patients) AS patients"
+        )->fetch(PDO::FETCH_ASSOC);
+        require_once __DIR__ . '/../views/admin/stats.php';
+    }
+
+    public function statsData() {
+        Auth::checkRole(array('admin'));
+        $grain = (isset($_GET['grain']) && $_GET['grain'] === 'quarter') ? 'quarter' : 'month';
+        $db = $this->model()['db'];
+        $revenue = $this->trend($db, $grain, "SELECT created_at, total_amount FROM invoices WHERE status = 'Paid'", 'created_at', 'SUM(src.total_amount)');
+        $patients = $this->trend($db, $grain, "SELECT created_at FROM patients", 'created_at', 'COUNT(src.created_at)');
+        $records = $this->trend($db, $grain, "SELECT visit_date AS created_at FROM medical_records", 'created_at', 'COUNT(src.created_at)');
+        $visits = $this->trend($db, $grain, "SELECT appointment_date AS created_at FROM appointments WHERE status <> 'Cancelled'", 'created_at', 'COUNT(src.created_at)');
+        $labels = array();
+        foreach ($revenue as $row) {
+            $labels[] = $row['label'];
+        }
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(array(
+            'labels' => $labels,
+            'revenue' => array_map('floatval', array_column($revenue, 'value')),
+            'patients' => array_map('intval', array_column($patients, 'value')),
+            'records' => array_map('intval', array_column($records, 'value')),
+            'visits' => array_map('intval', array_column($visits, 'value')),
+        ));
+        exit();
+    }
+
+    private function trend($db, $grain, $sourceSql, $dateColumn, $aggregate) {
+        $trunc = $grain === 'quarter' ? 'quarter' : 'month';
+        $step = $grain === 'quarter' ? '3 months' : '1 month';
+        $back = $grain === 'quarter' ? '21 months' : '11 months';
+        $label = $grain === 'quarter'
+            ? "('Q' || EXTRACT(QUARTER FROM b.bucket)::int || '/' || EXTRACT(YEAR FROM b.bucket)::int)"
+            : "to_char(b.bucket, 'MM/YYYY')";
+        $sql = "WITH buckets AS (
+                    SELECT generate_series(
+                        date_trunc('$trunc', CURRENT_DATE) - interval '$back',
+                        date_trunc('$trunc', CURRENT_DATE),
+                        interval '$step'
+                    ) AS bucket
+                )
+                SELECT $label AS label, COALESCE($aggregate, 0) AS value
+                FROM buckets b
+                LEFT JOIN ($sourceSql) src ON date_trunc('$trunc', src.$dateColumn) = b.bucket
+                GROUP BY b.bucket
+                ORDER BY b.bucket";
+        return $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

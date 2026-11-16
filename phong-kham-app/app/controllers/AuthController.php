@@ -209,5 +209,40 @@ class AuthController {
         header('Location: /index.php?deleted=1');
         exit();
     }
+
+        public function notifications() {
+        Auth::startSession();
+        header('Content-Type: application/json; charset=UTF-8');
+        if (!Auth::isLoggedIn()) {
+            echo json_encode(array('count' => 0, 'items' => array()));
+            exit();
+        }
+        try {
+            $db = (new Database())->getConnection();
+            $stmt = $db->prepare("SELECT notification_id, title, body, link, is_read, created_at FROM notifications WHERE user_id = :id ORDER BY created_at DESC LIMIT 12");
+            $stmt->execute(array(':id' => (int) $_SESSION['user_id']));
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $count = $db->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = :id AND is_read = false");
+            $count->execute(array(':id' => (int) $_SESSION['user_id']));
+            echo json_encode(array('count' => (int) $count->fetchColumn(), 'items' => $items), JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            echo json_encode(array('count' => 0, 'items' => array()));
+        }
+        exit();
+    }
+
+    public function readNotifications() {
+        Auth::startSession();
+        if (Auth::isLoggedIn()) {
+            try {
+                $stmt = (new Database())->getConnection()->prepare("UPDATE notifications SET is_read = true WHERE user_id = :id");
+                $stmt->execute(array(':id' => (int) $_SESSION['user_id']));
+            } catch (Exception $e) {
+            }
+        }
+        header('Content-Type: application/json; charset=UTF-8');
+        echo '{}';
+        exit();
+    }
 }
 ?>

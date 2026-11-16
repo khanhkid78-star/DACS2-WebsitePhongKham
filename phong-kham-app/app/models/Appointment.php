@@ -109,5 +109,59 @@ class Appointment {
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ? $row : null;
     }
+
+        public function search($q, $status, $doctorId, $patientId) {
+        $sql = "SELECT a.appointment_id, a.patient_id, a.doctor_id, a.appointment_date, a.status, a.note,
+                       p.full_name AS patient_name, p.phone AS patient_phone,
+                       d.full_name AS doctor_name, d.specialty
+                FROM " . $this->table_name . " a
+                LEFT JOIN patients p ON p.patient_id = a.patient_id
+                LEFT JOIN doctors d ON d.doctor_id = a.doctor_id
+                WHERE 1 = 1";
+        $params = array();
+        if ($patientId) {
+            $sql .= " AND a.patient_id = :patient_id";
+            $params[':patient_id'] = (int) $patientId;
+        }
+        if ($doctorId) {
+            $sql .= " AND a.doctor_id = :doctor_id";
+            $params[':doctor_id'] = (int) $doctorId;
+        }
+        $allowed = array('Pending', 'Scheduled', 'Completed', 'Cancelled');
+        if (in_array($status, $allowed, true)) {
+            $sql .= " AND a.status = :status";
+            $params[':status'] = $status;
+        }
+        if ($q !== '') {
+            $sql .= " AND (
+                COALESCE(p.full_name, '') ILIKE :q
+                OR COALESCE(p.phone, '') ILIKE :q
+                OR COALESCE(d.full_name, '') ILIKE :q
+                OR COALESCE(a.note, '') ILIKE :q
+                OR CAST(a.appointment_id AS TEXT) = :exact
+            )";
+            $params[':q'] = '%' . $q . '%';
+            $params[':exact'] = $q;
+        }
+        $sql .= " ORDER BY a.appointment_date DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function updateRow($id, $doctorId, $appointmentDate, $note, $status) {
+        $stmt = $this->conn->prepare(
+            "UPDATE " . $this->table_name . "
+             SET doctor_id = :doctor_id, appointment_date = :appointment_date, note = :note, status = :status
+             WHERE appointment_id = :id"
+        );
+        return $stmt->execute(array(
+            ':doctor_id' => $doctorId,
+            ':appointment_date' => $appointmentDate,
+            ':note' => $note,
+            ':status' => $status,
+            ':id' => $id,
+        ));
+    }
 }
 ?>

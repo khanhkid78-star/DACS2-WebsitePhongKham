@@ -829,3 +829,147 @@ body.modal-lock { overflow: hidden; }
 .nav-links {
     margin-left: auto;
 }
+
+.page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.filters {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: end;
+    margin: 8px 0 14px;
+}
+
+.filters label,
+.mine-search {
+    flex: 1 1 200px;
+    margin-top: 0;
+}
+
+.list-scroll {
+    max-height: 460px;
+    overflow: auto;
+    border: 1px solid #e4dcd0;
+    border-radius: 12px;
+}
+
+.list-scroll table {
+    margin-top: 0;
+}
+
+.list-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.list-scroll td.clip {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stat-grid,
+.chart-grid {
+    display: grid;
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.stat-grid {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.chart-grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+.bell-wrap {
+    position: relative;
+}
+
+.nav-bell {
+    position: relative;
+    border: 0;
+    background: transparent;
+    color: #1c2430;
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+.nav-bell:hover {
+    background: #f8e7d6;
+}
+
+.bell-count {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 99px;
+    background: #c24e12;
+    color: #fff;
+    font-size: 11px;
+    line-height: 16px;
+}
+
+.bell-panel {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: 320px;
+    max-height: 360px;
+    overflow: auto;
+    z-index: 40;
+    padding: 8px;
+    border: 1px solid #e4dcd0;
+    border-radius: 12px;
+    background: #fffdf8;
+    box-shadow: 0 16px 40px rgba(6, 36, 63, .16);
+}
+
+.bell-panel.is-open {
+    display: block;
+}
+
+.bell-item {
+    display: block;
+    padding: 8px;
+    border-radius: 8px;
+    color: #1c2430;
+    text-decoration: none;
+}
+
+.bell-item.is-new {
+    background: #f8e7d6;
+}
+
+.bell-item span {
+    display: block;
+    color: #5c6773;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 800px) {
+    .stat-grid,
+    .chart-grid {
+        grid-template-columns: 1fr;
+    }
+}

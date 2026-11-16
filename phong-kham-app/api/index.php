@@ -93,6 +93,7 @@ switch ($action) {
         break;
 
     case 'home':
+        
     case 'about':
         require_once __DIR__ . '/../app/config/database.php';
         $db = (new Database())->getConnection();
@@ -140,6 +141,28 @@ switch ($action) {
         break;
     case 'delete_account':
         (new AuthController())->deleteOwnAccount();
+        break;
+
+    case 'appointment_rows':
+        (new BookingController())->appointmentRows();
+        break;
+    case 'update_appointment':
+        (new BookingController())->updateAppointment();
+        break;
+    case 'record_rows':
+        (new RecordController())->rows();
+        break;
+    case 'admin_stats':
+        (new AdminController())->showStats();
+        break;
+    case 'admin_stats_data':
+        (new AdminController())->statsData();
+        break;
+    case 'notifications':
+        (new AuthController())->notifications();
+        break;
+    case 'notifications_read':
+        (new AuthController())->readNotifications();
         break;
 
     case 'whoami':

@@ -50,6 +50,15 @@ class BookingController {
         }
 
         if ($this->appointmentModel->create($patient_id, $doctor_id, $appointment_date, $note)) {
+
+            $who = $this->db->prepare("SELECT p.full_name AS patient_name, d.full_name AS doctor_name FROM patients p, doctors d WHERE p.patient_id = :p AND d.doctor_id = :d");
+            $who->execute(array(':p' => $patient_id, ':d' => $doctor_id));
+            $info = $who->fetch(PDO::FETCH_ASSOC);
+            require_once __DIR__ . '/../helpers/Notify.php';
+            $text = ($info['patient_name'] ?? 'Bệnh nhân') . ' đặt lịch với BS. ' . ($info['doctor_name'] ?? '') . ' lúc ' . date('H:i d/m/Y', strtotime($appointment_date)) . '. ' . $note;
+            Notify::send($this->db, 'receptionists', 0, 'Có lịch hẹn mới', $text, '/index.php?action=receptionist_appointments');
+            Notify::send($this->db, 'doctor', $doctor_id, 'Có lịch hẹn mới', $text, '/index.php');
+
             Auth::flash('Đã gửi yêu cầu. Lễ tân sẽ gọi xác nhận.', true);
             header('Location: /index.php?action=my_appointments');
             exit();
@@ -81,7 +90,7 @@ class BookingController {
         return (int) $insert->fetchColumn();
     }
 
-        public function myAppointments() {
+    public function myAppointments() {
         Auth::checkRole(array('patient', 'admin'));
         require_once __DIR__ . '/../models/MedicalRecord.php';
         require_once __DIR__ . '/../models/Invoice.php';
@@ -101,7 +110,8 @@ class BookingController {
 
     public function manageAppointments() {
         Auth::checkRole(array('receptionist', 'admin'));
-        $appointments = $this->appointmentModel->getAllWithDetails();
+        $doctors = $this->db->query("SELECT doctor_id, full_name FROM doctors ORDER BY full_name")->fetchAll(PDO::FETCH_ASSOC);
+        $appointments = $this->appointmentModel->search('', '', 0, null);
         require_once __DIR__ . '/../views/receptionist/manage_appointments.php';
     }
 
@@ -119,6 +129,18 @@ class BookingController {
 
         if ($id > 0 && in_array($status, $allowed, true)) {
             $this->appointmentModel->updateStatus($id, $status);
+
+            $info = $this->db->prepare("SELECT a.appointment_date, a.patient_id, a.doctor_id, d.full_name AS doctor_name FROM appointments a LEFT JOIN doctors d ON d.doctor_id = a.doctor_id WHERE a.appointment_id = :id");
+            $info->execute(array(':id' => $id));
+            $row = $info->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                require_once __DIR__ . '/../helpers/Notify.php';
+                $map = array('Scheduled' => 'đã được duyệt', 'Cancelled' => 'đã bị hủy', 'Completed' => 'đã khám xong');
+                $text = 'Lịch với BS. ' . $row['doctor_name'] . ' lúc ' . date('H:i d/m/Y', strtotime($row['appointment_date'])) . ' ' . $map[$status] . '.';
+                Notify::send($this->db, 'patient', (int) $row['patient_id'], 'Cập nhật lịch hẹn', $text, '/index.php?action=my_appointments');
+                Notify::send($this->db, 'doctor', (int) $row['doctor_id'], 'Cập nhật lịch hẹn', $text, '/index.php');
+            }
+
             Auth::flash('Đã cập nhật trạng thái lịch hẹn.', true);
         }
 
@@ -141,6 +163,52 @@ class BookingController {
             Auth::flash('Không hủy được. Chỉ hủy lịch đang chờ duyệt của bạn.');
         }
         header('Location: /index.php?action=my_appointments');
+        exit();
+    }
+
+
+        public function appointmentRows() {
+        Auth::checkRole(array('receptionist', 'admin'));
+        $appointments = $this->appointmentModel->search(
+            trim($_GET['q'] ?? ''),
+            $_GET['status'] ?? '',
+            (int) ($_GET['doctor_id'] ?? 0),
+            null
+        );
+        require __DIR__ . '/../views/receptionist/_appointment_rows.php';
+        exit();
+    }
+
+    public function updateAppointment() {
+        Auth::checkRole(array('receptionist', 'admin'));
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /index.php?action=receptionist_appointments');
+            exit();
+        }
+        $id = (int) ($_POST['id'] ?? 0);
+        $doctorId = (int) ($_POST['doctor_id'] ?? 0);
+        $when = trim($_POST['appointment_date'] ?? '');
+        $note = trim($_POST['note'] ?? '');
+        $status = $_POST['status'] ?? '';
+        $allowed = array('Pending', 'Scheduled', 'Completed', 'Cancelled');
+        $stamp = strtotime($when);
+        $exists = $this->db->prepare("SELECT 1 FROM doctors WHERE doctor_id = :id");
+        $exists->execute(array(':id' => $doctorId));
+        if ($id < 1 || !$exists->fetchColumn() || $stamp === false || $note === '' || !in_array($status, $allowed, true)) {
+            Auth::flash('Dòng lịch chưa đủ hoặc không hợp lệ.');
+            header('Location: /index.php?action=receptionist_appointments');
+            exit();
+        }
+        $this->appointmentModel->updateRow($id, $doctorId, date('Y-m-d H:i:s', $stamp), $note, $status);
+        require_once __DIR__ . '/../helpers/Notify.php';
+        $patient = $this->db->prepare("SELECT patient_id FROM appointments WHERE appointment_id = :id");
+        $patient->execute(array(':id' => $id));
+        $patientId = (int) $patient->fetchColumn();
+        $text = 'Lịch #' . $id . ' đã được sửa, trạng thái ' . $status . '.';
+        Notify::send($this->db, 'patient', $patientId, 'Lịch hẹn được sửa', $text, '/index.php?action=my_appointments');
+        Notify::send($this->db, 'doctor', $doctorId, 'Lịch hẹn được sửa', $text, '/index.php');
+        Auth::flash('Đã sửa lịch hẹn.', true);
+        header('Location: /index.php?action=receptionist_appointments');
         exit();
     }
 }

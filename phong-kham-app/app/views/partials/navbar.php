@@ -43,6 +43,7 @@ $role = Auth::getRole();
         <?php elseif ($role === 'admin'): ?>
             <!-- Menu dành cho Admin -->
             <a href="/index.php?action=admin_users">Quản Lý Tài Khoản</a>
+            <a href="/index.php?action=admin_stats">Thống kê</a>
             <a href="/index.php?action=doctor_records">Bệnh Án</a>
             <a href="/index.php?action=invoices">Hóa Đơn</a>
             <a href="/index.php?action=receptionist_appointments">Lịch hẹn</a>
@@ -50,6 +51,14 @@ $role = Auth::getRole();
         <?php endif; ?>
 
         <?php if (Auth::isLoggedIn()): ?>
+            <span class="bell-wrap">
+                <button class="nav-bell" id="nav-bell" type="button" aria-label="Thông báo">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+                    <span class="bell-count" id="bell-count"></span>
+                </button>
+                <div class="bell-panel" id="bell-panel"></div>
+            </span>
+            
             <a href="/index.php?action=account">Tài khoản</a>
             <span class="nav-user"><?php echo htmlspecialchars((string) ($_SESSION['username'] ?? '')); ?></span>
             <a href="/index.php?action=logout" class="nav-logout">Đăng xuất</a>

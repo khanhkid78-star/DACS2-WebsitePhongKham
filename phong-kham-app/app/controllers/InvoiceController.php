@@ -22,11 +22,18 @@ class InvoiceController {
             header('Location: /index.php?action=invoices');
             exit();
         }
-        $message = $this->model()->createFromRecord(
-            (int) ($_POST['record_id'] ?? 0),
-            $_POST['exam_fee'] ?? '',
-            $_POST['payment_method'] ?? ''
-        );
+        $recordId = (int) ($_POST['record_id'] ?? 0);
+        $message = $this->model()->createFromRecord($recordId, $_POST['exam_fee'] ?? '', $_POST['payment_method'] ?? '');
+        if ($message === '') {
+            $db = (new Database())->getConnection();
+            $row = $db->prepare("SELECT patient_id, patient_name FROM medical_records WHERE record_id = :id");
+            $row->execute(array(':id' => $recordId));
+            $info = $row->fetch(PDO::FETCH_ASSOC);
+            if ($info) {
+                require_once __DIR__ . '/../helpers/Notify.php';
+                Notify::send($db, 'patient', (int) $info['patient_id'], 'Có hóa đơn mới', 'Phòng khám đã lập hóa đơn cho ' . $info['patient_name'] . '.', '/index.php?action=my_appointments#hoa-don');
+            }
+        }
         Auth::flash($message === '' ? 'Đã lập hóa đơn.' : $message, $message === '');
         header('Location: /index.php?action=invoices');
         exit();
@@ -39,8 +46,20 @@ class InvoiceController {
             exit();
         }
         if ($this->model()->markPaid((int) ($_POST['invoice_id'] ?? 0))) {
+            $db = (new Database())->getConnection();
+            $row = $db->prepare("SELECT patient_id, total_amount FROM invoices WHERE invoice_id = :id");
+            $row->execute(array(':id' => (int) ($_POST['invoice_id'] ?? 0)));
+            $info = $row->fetch(PDO::FETCH_ASSOC);
+            
+            if ($info) {
+                require_once __DIR__ . '/../helpers/Notify.php';
+                Notify::send($db, 'patient', (int) $info['patient_id'], 'Đã thu hóa đơn', 'Hóa đơn ' . number_format((float) $info['total_amount']) . ' đ đã được thu.', '/index.php?action=my_appointments#hoa-don');
+            }
+
             Auth::flash('Đã xác nhận thu tiền.', true);
+
         } else {
+
             Auth::flash('Hóa đơn này đã thanh toán, hoặc không còn.');
         }
         header('Location: /index.php?action=invoices');
