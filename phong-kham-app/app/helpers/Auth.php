@@ -14,8 +14,9 @@ class Auth {
                 'samesite' => 'Lax',
             ));
             session_start();
+            self::restoreFromCookie();
         }
-        self::restoreFromCookie();
+        
     }
 
     public static function isLoggedIn() {

@@ -214,7 +214,8 @@ document.addEventListener("visibilitychange", function () {
         return;
     }
     var mine = document.body.getAttribute("data-user") || "0";
-    fetch("/index.php?action=whoami", { credentials: "same-origin", cache: "no-store" })
+    var tab = sessionStorage.getItem("pk_tab") || "";
+    fetch("/index.php?action=whoami&tab=" + encodeURIComponent(tab), { credentials: "same-origin", cache: "no-store" })
         .then(function (res) { return res.json(); })
         .then(function (data) {
             if (String(data.user_id) !== String(mine)) {

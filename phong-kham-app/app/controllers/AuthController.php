@@ -46,9 +46,13 @@ class AuthController {
                     $_SESSION['receptionist_id'] = $user['receptionist_id'];
                     $_SESSION['patient_id'] = $user['patient_id'];
                     
-                    session_regenerate_id(true);
                     Auth::remember();
-                    header('Location: ' . $this->afterLoginUrl($user['role'], $next, $doctor_id));
+                    $target = $this->afterLoginUrl($user['role'], $next, $doctor_id);
+                    $tab = Auth::currentTab();
+                    if ($tab !== '') {
+                        $target .= (strpos($target, '?') === false ? '?' : '&') . 'tab=' . urlencode($tab);
+                    }
+                    header('Location: ' . $target);
                     exit();
                 }
             }
@@ -136,15 +140,13 @@ class AuthController {
 
     public function logout() {
         Auth::startSession();
-        $_SESSION = array();
         Auth::forget();
-        session_destroy();
-        header("Location: /index.php");
+        header('Location: /index.php');
         exit();
     }
 
 
-        private function requireUser() {
+    private function requireUser() {
         Auth::startSession();
         if (!Auth::isLoggedIn()) {
             header('Location: /index.php?action=login');
