@@ -94,4 +94,15 @@ require_once __DIR__ . '/../partials/navbar.php';
     </div>
 </div>
 
+
+<div class="modal" id="record-detail-modal">
+    <div class="modal-card">
+        <button class="modal-x" type="button" data-close-box>Đóng</button>
+        <h2 id="detail-title">Chi tiết hồ sơ</h2>
+        <div id="detail-body" class="detail-body">
+            <p class="lead">Đang tải…</p>
+        </div>
+    </div>
+</div>
+
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>

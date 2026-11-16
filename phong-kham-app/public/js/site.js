@@ -285,6 +285,69 @@ if (window.jQuery) {
         openBox("record-modal");
     });
 
+    // Click cả row (trừ nút Sửa) → popup chi tiết hồ sơ + đơn thuốc
+    jQuery(document).on("click", "tr.record-row", function (e) {
+        if (jQuery(e.target).closest("[data-record], button, a").length) {
+            return;
+        }
+        var id = jQuery(this).attr("data-record-id");
+        if (!id) return;
+
+        jQuery("#detail-title").text("Chi tiết hồ sơ #" + id);
+        jQuery("#detail-body").html("<p class=\"lead\">Đang tải…</p>");
+        openBox("record-detail-modal");
+
+        jQuery.getJSON("/index.php?action=record_detail&id=" + encodeURIComponent(id))
+            .done(function (res) {
+                if (!res || !res.ok || !res.data) {
+                    jQuery("#detail-body").html("<p class=\"lead\">" + (res && res.error ? res.error : "Không tải được hồ sơ") + "</p>");
+                    return;
+                }
+                var d = res.data;
+                var visit = d.visit_date ? new Date(d.visit_date) : null;
+                var visitStr = visit && !isNaN(visit)
+                    ? ("0" + visit.getHours()).slice(-2) + ":" + ("0" + visit.getMinutes()).slice(-2) + " "
+                      + ("0" + visit.getDate()).slice(-2) + "/" + ("0" + (visit.getMonth() + 1)).slice(-2) + "/" + visit.getFullYear()
+                    : (d.visit_date || "");
+
+                var html = "";
+                html += "<p><strong>Bệnh nhân:</strong> " + esc(d.patient_name || "") + "</p>";
+                html += "<p><strong>Bác sĩ:</strong> " + esc(d.doctor_name || "") + "</p>";
+                html += "<p><strong>Ngày khám:</strong> " + esc(visitStr) + "</p>";
+                if (d.appointment_id) {
+                    html += "<p><strong>Mã lịch hẹn:</strong> #" + esc(String(d.appointment_id)) + "</p>";
+                }
+                html += "<p><strong>Triệu chứng:</strong><br>" + esc(d.symptoms || "").replace(/\n/g, "<br>") + "</p>";
+                html += "<p><strong>Chẩn đoán:</strong><br>" + esc(d.diagnosis || "").replace(/\n/g, "<br>") + "</p>";
+                html += "<p><strong>Kết luận:</strong><br>" + esc(d.conclusion || "").replace(/\n/g, "<br>") + "</p>";
+
+                var meds = d.medicines || [];
+                html += "<h3 style=\"margin-top:1rem\">Đơn thuốc</h3>";
+                if (!meds.length) {
+                    html += "<p class=\"lead\">Không có đơn thuốc.</p>";
+                } else {
+                    html += "<div class=\"table-wrap\"><table><thead><tr>";
+                    html += "<th>Thuốc</th><th>Đơn vị</th><th>SL</th><th>Liều</th><th>Cách dùng</th><th>Đơn giá</th>";
+                    html += "</tr></thead><tbody>";
+                    meds.forEach(function (m) {
+                        html += "<tr>";
+                        html += "<td>" + esc(m.medicine_name || "") + "</td>";
+                        html += "<td>" + esc(m.unit || "") + "</td>";
+                        html += "<td>" + esc(String(m.quantity != null ? m.quantity : "")) + "</td>";
+                        html += "<td>" + esc(m.dosage || "") + "</td>";
+                        html += "<td>" + esc(m.usage_instructions || "") + "</td>";
+                        html += "<td>" + esc(m.price != null ? String(m.price) : "") + "</td>";
+                        html += "</tr>";
+                    });
+                    html += "</tbody></table></div>";
+                }
+                jQuery("#detail-body").html(html);
+            })
+            .fail(function () {
+                jQuery("#detail-body").html("<p class=\"lead\">Lỗi kết nối khi tải hồ sơ.</p>");
+            });
+    });
+
     jQuery("#open-new-medicine").on("click", function () {
         jQuery("#medicine-title").text("Thêm thuốc");
         jQuery("#medicine-form")[0].reset();

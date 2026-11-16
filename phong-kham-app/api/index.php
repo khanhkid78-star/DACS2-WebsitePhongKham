@@ -152,6 +152,10 @@ switch ($action) {
     case 'record_rows':
         (new RecordController())->rows();
         break;
+    case 'record_detail':
+        (new RecordController())->detail();
+        break;
+
     case 'medicine_rows':
         (new MedicineController())->rows();
         break;

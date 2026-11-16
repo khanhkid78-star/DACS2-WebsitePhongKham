@@ -68,6 +68,50 @@ class MedicalRecord {
         return $row ? $row : null;
     }
 
+    public function getDetail($record_id, $doctor_id = null) {
+        $sql = "SELECT m.record_id,
+                    COALESCE(m.patient_name, p.full_name) AS patient_name,
+                    COALESCE(m.doctor_name, d.full_name) AS doctor_name,
+                    m.appointment_id,
+                    m.visit_date,
+                    m.symptoms,
+                    m.diagnosis,
+                    m.conclusion,
+                    m.created_at
+                FROM " . $this->table_name . " m
+                LEFT JOIN patients p ON p.patient_id = m.patient_id
+                LEFT JOIN doctors d ON d.doctor_id = m.doctor_id
+                WHERE m.record_id = :id";
+        $params = array(':id' => (int) $record_id);
+        if ($doctor_id !== null) {
+            $sql .= " AND m.doctor_id = :doctor_id";
+            $params[':doctor_id'] = (int) $doctor_id;
+        }
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            return null;
+        }
+
+        $medStmt = $this->conn->prepare(
+            "SELECT med.name AS medicine_name,
+                    med.unit,
+                    med.price,
+                    pd.quantity,
+                    pd.dosage,
+                    pd.usage_instructions
+            FROM prescriptions pr
+            JOIN prescription_details pd ON pd.prescription_id = pr.prescription_id
+            JOIN medicines med ON med.medicine_id = pd.medicine_id
+            WHERE pr.record_id = :id
+            ORDER BY pd.id"
+        );
+        $medStmt->execute(array(':id' => (int) $record_id));
+        $row['medicines'] = $medStmt->fetchAll(PDO::FETCH_ASSOC);
+        return $row;
+    }
+
     public function update($record_id, $symptoms, $diagnosis, $conclusion, $doctor_id) {
         $sql = "UPDATE " . $this->table_name . "
                 SET symptoms = :symptoms, diagnosis = :diagnosis, conclusion = :conclusion

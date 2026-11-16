@@ -8,7 +8,7 @@
         'conclusion' => (string) $rec['conclusion'],
     ), JSON_UNESCAPED_UNICODE), ENT_QUOTES);
 ?>
-    <tr>
+    <tr class="record-row" data-record-id="<?php echo (int) $rec['record_id']; ?>" style="cursor:pointer">
         <td>#<?php echo (int) $rec['record_id']; ?></td>
         <td><?php echo htmlspecialchars((string) $rec['patient_name']); ?></td>
         <td><?php echo htmlspecialchars((string) $rec['doctor_name']); ?></td>

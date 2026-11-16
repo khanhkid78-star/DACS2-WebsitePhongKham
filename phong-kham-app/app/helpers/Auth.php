@@ -114,9 +114,23 @@ class Auth {
     }
 
     public static function forget() {
+        self::startSession();
         $tabs = self::readTabs();
-        unset($tabs[self::currentTab()]);
+        $tab = self::currentTab();
+        if ($tab !== '') {
+            unset($tabs[$tab]);
+        }
         self::writeTabs($tabs);
+        self::clearUser();
+        if (empty($tabs)) {
+            setcookie(self::COOKIE, '', array(
+                'expires' => time() - 3600,
+                'path' => '/',
+                'secure' => true,
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ));
+        }
     }
 
     private static function restoreFromCookie() {

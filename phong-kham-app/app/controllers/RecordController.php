@@ -184,6 +184,36 @@ class RecordController {
         exit();
     }
 
+    public function detail() {
+        Auth::checkRole(array('doctor', 'admin'));
+        header('Content-Type: application/json; charset=UTF-8');
+
+        $id = (int) ($_GET['id'] ?? 0);
+        if ($id < 1) {
+            echo json_encode(array('ok' => false, 'error' => 'Thiếu mã hồ sơ'));
+            exit();
+        }
+
+        $role = Auth::getRole();
+        $doctorFilter = null;
+        if ($role === 'doctor') {
+            $doctorFilter = (int) ($_SESSION['doctor_id'] ?? 0);
+            if ($doctorFilter < 1) {
+                echo json_encode(array('ok' => false, 'error' => 'Tài khoản bác sĩ chưa gắn hồ sơ'));
+                exit();
+            }
+        }
+
+        $detail = $this->bag()['records']->getDetail($id, $doctorFilter);
+        if (!$detail) {
+            echo json_encode(array('ok' => false, 'error' => 'Không tìm thấy hồ sơ'));
+            exit();
+        }
+
+        echo json_encode(array('ok' => true, 'data' => $detail), JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
     private function readLines() {
         $ids = isset($_POST['medicine_id']) ? (array) $_POST['medicine_id'] : array();
         $qtys = isset($_POST['quantity']) ? (array) $_POST['quantity'] : array();
