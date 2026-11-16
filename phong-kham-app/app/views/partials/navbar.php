@@ -64,7 +64,9 @@ $role = Auth::getRole();
                 <a href="/index.php?action=account">Tài khoản</a>
             <?php endif; ?>
             <span class="nav-user"><?php echo htmlspecialchars((string) ($_SESSION['username'] ?? '')); ?></span>
-            <a href="/index.php?action=logout" class="nav-logout">Đăng xuất</a>
+            <a href="/index.php?action=logout<?php echo Auth::currentTab() !== '' ? '&tab=' . urlencode(Auth::currentTab()) : ''; ?>" class="nav-logout">
+                Đăng xuất
+            </a>
         <?php else: ?>
             <a class="nav-login" href="/index.php?action=login&next=booking" data-open="login">Đăng nhập</a>
             <a class="nav-register" href="/index.php?action=register" data-open="register">Đăng ký</a>

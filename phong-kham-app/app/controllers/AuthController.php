@@ -140,17 +140,24 @@ class AuthController {
 
     public function logout() {
         Auth::startSession();
+        $tab = Auth::currentTab();
         Auth::forget();
         $_SESSION = array();
         if (session_status() === PHP_SESSION_ACTIVE) {
             $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params['path'], $params['domain'] ?? '',
-                $params['secure'], $params['httponly']
-            );
+            $path = !empty($params['path']) ? $params['path'] : '/';
+            $past = gmdate('D, d M Y H:i:s', time() - 42000) . ' GMT';
+            $name = session_name();
+            header('Set-Cookie: ' . $name . '=; Expires=' . $past . '; Max-Age=0; Path=' . $path . '; HttpOnly; SameSite=Lax', false);
+            header('Set-Cookie: ' . $name . '=; Expires=' . $past . '; Max-Age=0; Path=' . $path . '; Secure; HttpOnly; SameSite=Lax', false);
             session_destroy();
         }
-        header('Location: /index.php');
+        $url = '/index.php?out=1';
+        if ($tab !== '') {
+            $url .= '&tab=' . urlencode($tab);
+        }
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Location: ' . $url);
         exit();
     }
 

@@ -120,33 +120,22 @@ class Auth {
         if ($tab !== '') {
             unset($tabs[$tab]);
         }
-        self::writeTabs($tabs);
         self::clearUser();
+        unset($_COOKIE[self::COOKIE]);
         if (empty($tabs)) {
-            setcookie(self::COOKIE, '', array(
-                'expires' => time() - 3600,
-                'path' => '/',
-                'secure' => true,
-                'httponly' => true,
-                'samesite' => 'Lax',
-            ));
+            self::expireCookie(self::COOKIE);
+            return;
         }
+        self::writeTabs($tabs);
     }
 
     private static function restoreFromCookie() {
-        $tabs = self::readTabs();
         $tab = self::currentTab();
-        if ($tab === '' || empty($tabs[$tab]['user_id'])) {
-            $tab = '';
-            $latest = 0;
-            foreach ($tabs as $id => $row) {
-                if (!empty($row['user_id']) && !empty($row['exp']) && $row['exp'] >= time() && $row['exp'] > $latest) {
-                    $latest = $row['exp'];
-                    $tab = (string) $id;
-                }
-            }
+        if ($tab === '') {
+            return;
         }
-        if ($tab === '' || empty($tabs[$tab]['user_id']) || $tabs[$tab]['exp'] < time()) {
+        $tabs = self::readTabs();
+        if (empty($tabs[$tab]['user_id']) || $tabs[$tab]['exp'] < time()) {
             return;
         }
         $data = $tabs[$tab];
@@ -202,6 +191,22 @@ class Auth {
             'httponly' => true,
             'samesite' => 'Lax',
         ));
+    }
+
+    private static function https() {
+        return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    }
+
+    private static function expireCookie($name) {
+        $past = gmdate('D, d M Y H:i:s', time() - 42000) . ' GMT';
+        $lines = array(
+            $name . '=; Expires=' . $past . '; Max-Age=0; Path=/; HttpOnly; SameSite=Lax',
+            $name . '=; Expires=' . $past . '; Max-Age=0; Path=/; Secure; HttpOnly; SameSite=Lax',
+        );
+        foreach ($lines as $line) {
+            header('Set-Cookie: ' . $line, false);
+        }
     }
 
     public static function flash($message, $ok = false) {
