@@ -36,14 +36,12 @@ class Medicine {
             $params[':q3'] = $like;
             $params[':q4'] = $like;
             $params[':q5'] = '%' . ($digits !== '' ? $digits : $q) . '%';
+            if ($digits !== '') {
+                $sql .= " OR price = :exact";
+                $params[':exact'] = (float) $digits;
+            }
+            $sql .= ")";
         }
-
-        if ($digits !== '') {
-            $sql .= " OR price = :exact";
-            $params[':exact'] = (float) $digits;
-        }
-        $sql .= ")";
-
         if ($min !== '' && is_numeric($min)) {
             $sql .= " AND price >= :pmin";
             $params[':pmin'] = (float) $min;
@@ -52,7 +50,6 @@ class Medicine {
             $sql .= " AND price <= :pmax";
             $params[':pmax'] = (float) $max;
         }
-
         if ($unit !== '') {
             $sql .= " AND unit = :unit";
             $params[':unit'] = $unit;

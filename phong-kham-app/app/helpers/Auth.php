@@ -120,9 +120,18 @@ class Auth {
     }
 
     private static function restoreFromCookie() {
-        self::clearUser();
-        $tab = self::currentTab();
         $tabs = self::readTabs();
+        $tab = self::currentTab();
+        if ($tab === '' || empty($tabs[$tab]['user_id'])) {
+            $tab = '';
+            $latest = 0;
+            foreach ($tabs as $id => $row) {
+                if (!empty($row['user_id']) && !empty($row['exp']) && $row['exp'] >= time() && $row['exp'] > $latest) {
+                    $latest = $row['exp'];
+                    $tab = (string) $id;
+                }
+            }
+        }
         if ($tab === '' || empty($tabs[$tab]['user_id']) || $tabs[$tab]['exp'] < time()) {
             return;
         }

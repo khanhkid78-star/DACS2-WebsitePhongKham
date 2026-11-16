@@ -308,6 +308,12 @@ if (window.jQuery) {
     function bindList(formId, bodyId, url) {
         var form = document.getElementById(formId);
         if (!form) return;
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            jQuery.get(url, jQuery(form).serialize(), function (html) {
+                jQuery("#" + bodyId).html(html);
+            });
+        });
         var timer;
         jQuery(form).on("input change", function () {
             clearTimeout(timer);
