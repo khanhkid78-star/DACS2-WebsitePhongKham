@@ -21,17 +21,38 @@ class Medicine {
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
-    public function search($q, $unit) {
+    public function search($q, $unit, $min = '', $max = '') {
         $sql = "SELECT * FROM medicines WHERE 1=1";
         $params = array();
         if ($q !== '') {
-            $sql .= " AND (name ILIKE :q OR unit ILIKE :q2 OR COALESCE(description, '') ILIKE :q3 OR CAST(medicine_id AS TEXT) ILIKE :q4)";
+            $digits = preg_replace('/\D+/', '', $q);
+            $sql .= " AND (
+                name ILIKE :q
+                OR COALESCE(description, '') ILIKE :q3
+                OR CAST(medicine_id AS TEXT) ILIKE :q4
+                OR CAST(price AS TEXT) ILIKE :q5";
             $like = '%' . $q . '%';
             $params[':q'] = $like;
-            $params[':q2'] = $like;
             $params[':q3'] = $like;
             $params[':q4'] = $like;
+            $params[':q5'] = '%' . ($digits !== '' ? $digits : $q) . '%';
         }
+
+        if ($digits !== '') {
+            $sql .= " OR price = :exact";
+            $params[':exact'] = (float) $digits;
+        }
+        $sql .= ")";
+
+        if ($min !== '' && is_numeric($min)) {
+            $sql .= " AND price >= :pmin";
+            $params[':pmin'] = (float) $min;
+        }
+        if ($max !== '' && is_numeric($max)) {
+            $sql .= " AND price <= :pmax";
+            $params[':pmax'] = (float) $max;
+        }
+
         if ($unit !== '') {
             $sql .= " AND unit = :unit";
             $params[':unit'] = $unit;

@@ -156,6 +156,10 @@ class AuthController {
 
     public function showAccount() {
         $this->requireUser();
+        if (Auth::getRole() === 'admin') {
+            header('Location: /index.php?action=admin_users');
+            exit();
+        }
         $bundle = (new User((new Database())->getConnection()))->accountBundle((int) $_SESSION['user_id']);
         if (!$bundle) {
             Auth::flash('Không thấy tài khoản.');
@@ -171,7 +175,8 @@ class AuthController {
     public function saveAccount() {
         $this->requireUser();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /index.php?action=account');
+            $back = Auth::getRole() === 'admin' ? 'admin_users' : 'account';
+            header('Location: /index.php?action=' . $back);
             exit();
         }
         $username = trim($_POST['username'] ?? '');

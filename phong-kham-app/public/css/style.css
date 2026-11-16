@@ -636,6 +636,18 @@ td form {
     margin: 0 0 6px;
 }
 
+.row-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.row-actions form {
+    display: inline-flex;
+    margin: 0;
+}
+
 td .btn-navy,
 td .btn-ghost,
 td .btn-logout {

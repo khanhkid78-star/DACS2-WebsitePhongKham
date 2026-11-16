@@ -245,6 +245,10 @@ if (window.jQuery) {
         document.body.classList.remove("modal-lock");
     });
 
+    jQuery(document).on("click", "[data-open-box]", function () {
+        openBox(jQuery(this).attr("data-open-box"));
+    });
+
     jQuery(document).on("click", "[data-appt]", function () {
         var data = JSON.parse(jQuery(this).attr("data-appt"));
         jQuery("#appt-id").val(data.id);

@@ -5,7 +5,11 @@ class Notify {
     public static function send($db, $who, $linkId, $title, $body, $link) {
         try {
             if ($who === 'receptionists') {
-                $ids = self::ids($db, "SELECT user_id FROM users WHERE role = 'receptionist'");
+                $ids = self::ids(
+                    $db,
+                    "SELECT user_id FROM users
+                    WHERE role = 'receptionist' OR receptionist_id IS NOT NULL"
+                );
             } elseif ($who === 'patient') {
                 $ids = self::ids($db, "SELECT user_id FROM users WHERE patient_id = :id", array(':id' => (int) $linkId));
             } elseif ($who === 'doctor') {
@@ -30,17 +34,10 @@ class Notify {
         if (!$userIds) {
             return;
         }
+
         $ins = $db->prepare(
-            "INSERT INTO notifications (user_id, title, body, link) VALUES (:user_id, :title, :body, :link)"
-        );
-        $mail = $db->prepare(
-            "SELECT COALESCE(p.email, d.email, n.email, r.email) AS email
-             FROM users u
-             LEFT JOIN patients p ON p.patient_id = u.patient_id
-             LEFT JOIN doctors d ON d.doctor_id = u.doctor_id
-             LEFT JOIN nurses n ON n.nurse_id = u.nurse_id
-             LEFT JOIN receptionists r ON r.receptionist_id = u.receptionist_id
-             WHERE u.user_id = :id"
+            "INSERT INTO notifications (user_id, title, body, link)
+            VALUES (:user_id, :title, :body, :link)"
         );
         foreach ($userIds as $id) {
             $ins->execute(array(
@@ -49,11 +46,31 @@ class Notify {
                 ':body' => $body,
                 ':link' => $link,
             ));
-            $mail->execute(array(':id' => $id));
-            $row = $mail->fetch(PDO::FETCH_ASSOC);
-            if ($row && !empty($row['email'])) {
-                Mailer::send($row['email'], $title, $body . "\n\nPhong Kham Da Khoa Hung Dinh");
+        }
+
+        try {
+            $mail = $db->prepare(
+                "SELECT COALESCE(p.email, d.email, n.email, r.email) AS email
+                FROM users u
+                LEFT JOIN patients p ON p.patient_id = u.patient_id
+                LEFT JOIN doctors d ON d.doctor_id = u.doctor_id
+                LEFT JOIN nurses n ON n.nurse_id = u.nurse_id
+                LEFT JOIN receptionists r ON r.receptionist_id = u.receptionist_id
+                WHERE u.user_id = :id"
+            );
+            foreach ($userIds as $id) {
+                try {
+                    $mail->execute(array(':id' => $id));
+                    $row = $mail->fetch(PDO::FETCH_ASSOC);
+                    if ($row && !empty($row['email'])) {
+                        Mailer::send($row['email'], $title, $body . "\n\nPhong Kham Da Khoa Hung Dinh");
+                    }
+                } catch (Exception $e) {
+                    continue;
+                }
             }
+        } catch (Exception $e) {
+            return;
         }
     }
 }

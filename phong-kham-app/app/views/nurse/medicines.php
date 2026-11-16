@@ -15,8 +15,17 @@ require_once __DIR__ . '/../partials/navbar.php';
 
 <form class="filters" id="medicine-filters">
     <label>Tìm kiếm
-        <input type="search" name="q" placeholder="Tên, mã, mô tả">
+        <input type="search" name="q" placeholder="Tên, mã, mô tả hoặc giá (vd: 150000)">
     </label>
+    
+    <label>Giá từ
+        <input type="number" name="min_price" min="0" step="1" placeholder="0">
+    </label>
+
+    <label>Giá đến
+        <input type="number" name="max_price" min="0" step="1" placeholder="500000">
+    </label>
+    
     <label>Đơn vị
         <select name="unit">
             <option value="">Tất cả</option>

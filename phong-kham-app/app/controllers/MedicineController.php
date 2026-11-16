@@ -20,7 +20,9 @@ class MedicineController {
         Auth::checkRole(array('nurse', 'admin'));
         $medicines = $this->model()->search(
             trim($_GET['q'] ?? ''),
-            trim($_GET['unit'] ?? '')
+            trim($_GET['unit'] ?? ''),
+            trim($_GET['min_price'] ?? ''),
+            trim($_GET['max_price'] ?? '')
         );
         require __DIR__ . '/../views/nurse/_medicine_rows.php';
         exit();
