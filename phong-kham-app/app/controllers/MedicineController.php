@@ -11,13 +11,19 @@ class MedicineController {
     public function listMedicines() {
         Auth::checkRole(array('nurse', 'admin'));
         $medicineModel = $this->model();
-        $medicines = $medicineModel->getAll();
-        $editMedicine = null;
-        $editId = isset($_GET['edit']) ? (int) $_GET['edit'] : 0;
-        if ($editId > 0) {
-            $editMedicine = $medicineModel->find($editId);
-        }
+        $medicines = $medicineModel->search('', '');
+        $units = $medicineModel->units();
         require_once __DIR__ . '/../views/nurse/medicines.php';
+    }
+
+    public function rows() {
+        Auth::checkRole(array('nurse', 'admin'));
+        $medicines = $this->model()->search(
+            trim($_GET['q'] ?? ''),
+            trim($_GET['unit'] ?? '')
+        );
+        require __DIR__ . '/../views/nurse/_medicine_rows.php';
+        exit();
     }
 
     public function save() {

@@ -93,7 +93,7 @@ switch ($action) {
         break;
 
     case 'home':
-        
+
     case 'about':
         require_once __DIR__ . '/../app/config/database.php';
         $db = (new Database())->getConnection();
@@ -151,6 +151,9 @@ switch ($action) {
         break;
     case 'record_rows':
         (new RecordController())->rows();
+        break;
+    case 'medicine_rows':
+        (new MedicineController())->rows();
         break;
     case 'admin_stats':
         (new AdminController())->showStats();

@@ -281,6 +281,26 @@ if (window.jQuery) {
         openBox("record-modal");
     });
 
+    jQuery("#open-new-medicine").on("click", function () {
+        jQuery("#medicine-title").text("Thêm thuốc");
+        jQuery("#medicine-form")[0].reset();
+        jQuery("#medicine-id").prop("disabled", true).val("");
+        jQuery("#medicine-submit").text("Thêm thuốc");
+        openBox("medicine-modal");
+    });
+
+    jQuery(document).on("click", "[data-medicine]", function () {
+        var data = JSON.parse(jQuery(this).attr("data-medicine"));
+        jQuery("#medicine-title").text("Sửa thuốc #" + data.id);
+        jQuery("#medicine-id").prop("disabled", false).val(data.id);
+        jQuery("#medicine-name").val(data.name);
+        jQuery("#medicine-unit").val(data.unit);
+        jQuery("#medicine-price").val(data.price);
+        jQuery("#medicine-description").val(data.description);
+        jQuery("#medicine-submit").text("Cập nhật");
+        openBox("medicine-modal");
+    });
+
     function bindList(formId, bodyId, url) {
         var form = document.getElementById(formId);
         if (!form) return;
@@ -296,6 +316,7 @@ if (window.jQuery) {
     }
     bindList("appt-filters", "appt-body", "/index.php?action=appointment_rows");
     bindList("record-filters", "record-body", "/index.php?action=record_rows");
+    bindList("medicine-filters", "medicine-body", "/index.php?action=medicine_rows");
 
     jQuery("#mine-filter").on("input", function () {
         var q = jQuery(this).val().toLowerCase();

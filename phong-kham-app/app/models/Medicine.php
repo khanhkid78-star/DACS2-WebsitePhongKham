@@ -14,6 +14,34 @@ class Medicine {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function units() {
+        $stmt = $this->conn->query(
+            "SELECT DISTINCT unit FROM medicines WHERE unit <> '' ORDER BY unit"
+        );
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    public function search($q, $unit) {
+        $sql = "SELECT * FROM medicines WHERE 1=1";
+        $params = array();
+        if ($q !== '') {
+            $sql .= " AND (name ILIKE :q OR unit ILIKE :q2 OR COALESCE(description, '') ILIKE :q3 OR CAST(medicine_id AS TEXT) ILIKE :q4)";
+            $like = '%' . $q . '%';
+            $params[':q'] = $like;
+            $params[':q2'] = $like;
+            $params[':q3'] = $like;
+            $params[':q4'] = $like;
+        }
+        if ($unit !== '') {
+            $sql .= " AND unit = :unit";
+            $params[':unit'] = $unit;
+        }
+        $sql .= " ORDER BY medicine_id ASC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function find($id) {
         $stmt = $this->conn->prepare(
             "SELECT * FROM " . $this->table_name . " WHERE medicine_id = :id"
