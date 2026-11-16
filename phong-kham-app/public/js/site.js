@@ -310,12 +310,14 @@ if (window.jQuery) {
                 var count = data.count || 0;
                 jQuery("#bell-count").text(count || "").toggle(count > 0);
                 if (!data.items || !data.items.length) {
-                    jQuery("#bell-panel").html('<p class="lead">Chưa có thông báo.</p>');
+                    jQuery("#bell-panel").html('<p class="bell-empty">Chưa có thông báo.</p>');
                     return;
                 }
                 var html = "";
                 data.items.forEach(function (item) {
-                    html += '<a class="bell-item' + (item.is_read ? "" : " is-new") + '" href="' + esc(item.link || "#") + '"><strong>' + esc(item.title) + "</strong><span>" + esc(item.body) + "</span></a>";
+                    html += '<a class="bell-item' + (item.is_read ? "" : " is-new") + '" href="' + esc(item.link || "#") + '">'
+                        + '<strong>' + esc(item.title) + '</strong>'
+                        + '<span>' + esc(item.body) + '</span></a>';
                 });
                 jQuery("#bell-panel").html(html);
             });
@@ -330,6 +332,37 @@ if (window.jQuery) {
         });
         document.addEventListener("click", function () {
             jQuery("#bell-panel").removeClass("is-open");
+        });
+    }
+
+
+    document.addEventListener("click", function (event) {
+        var link = event.target.closest ? event.target.closest("a") : null;
+        if (!link || !link.href) return;
+        var url = new URL(link.href, location.origin);
+        if (url.origin !== location.origin || url.searchParams.get("tab")) return;
+        url.searchParams.set("tab", sessionStorage.getItem("pk_tab"));
+        link.href = url.toString();
+    }, true);
+
+    document.addEventListener("submit", function (event) {
+        var form = event.target;
+        if (!form || form.tagName !== "FORM") return;
+        var field = form.querySelector("input[name=tab]");
+        if (!field) {
+            field = document.createElement("input");
+            field.type = "hidden";
+            field.name = "tab";
+            form.appendChild(field);
+        }
+        field.value = sessionStorage.getItem("pk_tab") || "";
+    }, true);
+
+    if (window.jQuery) {
+        jQuery.ajaxPrefilter(function (options) {
+            var id = sessionStorage.getItem("pk_tab");
+            if (!id || !options.url) return;
+            options.url += (options.url.indexOf("?") === -1 ? "?" : "&") + "tab=" + encodeURIComponent(id);
         });
     }
 }

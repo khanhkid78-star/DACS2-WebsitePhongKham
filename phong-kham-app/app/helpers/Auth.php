@@ -87,12 +87,19 @@ class Auth {
     const DAYS = 30;
     const SECRET = 'hungdinh-phongkham-cookie-key-2026';
 
+    public static function currentTab() {
+        $tab = $_POST['tab'] ?? $_GET['tab'] ?? '';
+        return preg_match('/^[A-Za-z0-9]{8,40}$/', $tab) ? $tab : '';
+    }
+
     public static function remember() {
         self::startSession();
-        if (empty($_SESSION['user_id'])) {
+        $tab = self::currentTab();
+        if ($tab === '' || empty($_SESSION['user_id'])) {
             return;
         }
-        $payload = array(
+        $tabs = self::readTabs();
+        $tabs[$tab] = array(
             'user_id' => (int) $_SESSION['user_id'],
             'username' => (string) $_SESSION['username'],
             'role' => (string) $_SESSION['role'],
@@ -102,51 +109,23 @@ class Auth {
             'patient_id' => $_SESSION['patient_id'] ?? null,
             'exp' => time() + (60 * 60 * 24 * self::DAYS),
         );
-        $body = rtrim(strtr(base64_encode(json_encode($payload)), '+/', '-_'), '=');
-        $sig = hash_hmac('sha256', $body, self::SECRET);
-        setcookie(self::COOKIE, $body . '.' . $sig, array(
-            'expires' => $payload['exp'],
-            'path' => '/',
-            'secure' => true,
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ));
+        self::writeTabs($tabs);
     }
 
-        public static function forget() {
-        $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
-        setcookie(self::COOKIE, '', array(
-            'expires' => time() - 3600,
-            'path' => '/',
-            'secure' => true,
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ));
-        setcookie(session_name(), '', array(
-            'expires' => time() - 3600,
-            'path' => '/',
-            'secure' => $secure,
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ));
+    public static function forget() {
+        $tabs = self::readTabs();
+        unset($tabs[self::currentTab()]);
+        self::writeTabs($tabs);
     }
 
     private static function restoreFromCookie() {
-        if (!empty($_SESSION['user_id']) || empty($_COOKIE[self::COOKIE])) {
+        self::clearUser();
+        $tab = self::currentTab();
+        $tabs = self::readTabs();
+        if ($tab === '' || empty($tabs[$tab]['user_id']) || $tabs[$tab]['exp'] < time()) {
             return;
         }
-        $parts = explode('.', $_COOKIE[self::COOKIE], 2);
-        if (count($parts) !== 2) {
-            return;
-        }
-        if (!hash_equals(hash_hmac('sha256', $parts[0], self::SECRET), $parts[1])) {
-            return;
-        }
-        $data = json_decode(base64_decode(strtr($parts[0], '-_', '+/')), true);
-        if (!is_array($data) || empty($data['user_id']) || $data['exp'] < time()) {
-            return;
-        }
+        $data = $tabs[$tab];
         $_SESSION['user_id'] = $data['user_id'];
         $_SESSION['username'] = $data['username'];
         $_SESSION['role'] = $data['role'];
@@ -156,7 +135,52 @@ class Auth {
         $_SESSION['patient_id'] = $data['patient_id'];
     }
 
-        public static function flash($message, $ok = false) {
+    private static function clearUser() {
+        unset(
+            $_SESSION['user_id'],
+            $_SESSION['username'],
+            $_SESSION['role'],
+            $_SESSION['doctor_id'],
+            $_SESSION['nurse_id'],
+            $_SESSION['receptionist_id'],
+            $_SESSION['patient_id']
+        );
+    }
+
+    private static function readTabs() {
+        if (empty($_COOKIE[self::COOKIE])) {
+            return array();
+        }
+        $parts = explode('.', $_COOKIE[self::COOKIE], 2);
+        if (count($parts) !== 2) {
+            return array();
+        }
+        if (!hash_equals(hash_hmac('sha256', $parts[0], self::SECRET), $parts[1])) {
+            return array();
+        }
+        $data = json_decode(base64_decode(strtr($parts[0], '-_', '+/')), true);
+        return (is_array($data) && isset($data['tabs']) && is_array($data['tabs'])) ? $data['tabs'] : array();
+    }
+
+    private static function writeTabs($tabs) {
+        $now = time();
+        foreach ($tabs as $id => $row) {
+            if (empty($row['exp']) || $row['exp'] < $now) {
+                unset($tabs[$id]);
+            }
+        }
+        $body = rtrim(strtr(base64_encode(json_encode(array('tabs' => $tabs))), '+/', '-_'), '=');
+        $sig = hash_hmac('sha256', $body, self::SECRET);
+        setcookie(self::COOKIE, $body . '.' . $sig, array(
+            'expires' => time() + (60 * 60 * 24 * self::DAYS),
+            'path' => '/',
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ));
+    }
+
+    public static function flash($message, $ok = false) {
         self::startSession();
         $_SESSION['flash'] = $message;
         $_SESSION['flash_ok'] = $ok ? 1 : 0;

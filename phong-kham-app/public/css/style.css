@@ -927,16 +927,16 @@ body.modal-lock { overflow: hidden; }
     display: none;
     position: absolute;
     right: 0;
-    top: calc(100% + 8px);
-    width: 320px;
-    max-height: 360px;
+    top: calc(100% + 6px);
+    width: 260px;
+    max-height: 240px;
     overflow: auto;
     z-index: 40;
-    padding: 8px;
+    padding: 4px;
     border: 1px solid #e4dcd0;
-    border-radius: 12px;
+    border-radius: 10px;
     background: #fffdf8;
-    box-shadow: 0 16px 40px rgba(6, 36, 63, .16);
+    box-shadow: 0 8px 24px rgba(6, 36, 63, .12);
 }
 
 .bell-panel.is-open {
@@ -945,8 +945,8 @@ body.modal-lock { overflow: hidden; }
 
 .bell-item {
     display: block;
-    padding: 8px;
-    border-radius: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
     color: #1c2430;
     text-decoration: none;
 }
@@ -955,11 +955,35 @@ body.modal-lock { overflow: hidden; }
     background: #f8e7d6;
 }
 
-.bell-item span {
-    display: block;
+.bell-item span,
+.bell-empty {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 0;
     color: #5c6773;
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.bell-item strong {
+    display: block;
     font-size: 13px;
-    font-weight: 500;
+    line-height: 1.3;
+}
+
+.bell-empty {
+    display: block;
+    padding: 8px;
+}
+
+.alert {
+    margin: 0 0 10px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.35;
 }
 
 button:disabled {
