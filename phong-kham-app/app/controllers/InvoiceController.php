@@ -128,4 +128,31 @@ class InvoiceController {
         header('Location: /index.php?action=invoices');
         exit();
     }
+
+
+    public function preview() {
+        Auth::checkRole(array('receptionist', 'admin'));
+        header('Content-Type: application/json; charset=UTF-8');
+        $id = (int) ($_GET['record_id'] ?? 0);
+        $row = $id > 0 ? $this->model()->quote($id) : null;
+        echo json_encode($row ? array('ok' => true, 'data' => $row) : array('ok' => false), JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    public function detail() {
+        Auth::checkRole(array('receptionist', 'admin', 'patient'));
+        header('Content-Type: application/json; charset=UTF-8');
+        $id = (int) ($_GET['id'] ?? 0);
+        $patientFilter = null;
+        if (Auth::getRole() === 'patient') {
+            $patientFilter = (int) ($_SESSION['patient_id'] ?? 0);
+            if ($patientFilter < 1) {
+                echo json_encode(array('ok' => false));
+                exit();
+            }
+        }
+        $row = $id > 0 ? $this->model()->fullView($id, $patientFilter) : null;
+        echo json_encode($row ? array('ok' => true, 'data' => $row) : array('ok' => false, 'error' => 'Không thấy hóa đơn'), JSON_UNESCAPED_UNICODE);
+        exit();
+    }
 }

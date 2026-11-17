@@ -28,15 +28,55 @@ class Invoice {
     }
 
     public function recordsWithoutInvoice() {
-        $sql = "SELECT m.record_id, m.patient_id, m.diagnosis, m.visit_date,
-                       COALESCE(m.patient_name, p.full_name) AS patient_name
+        $sql = "SELECT m.record_id, m.visit_date, m.diagnosis,
+                    COALESCE(m.patient_name, p.full_name) AS patient_name,
+                    COALESCE(m.doctor_name, d.full_name) AS doctor_name
                 FROM medical_records m
                 LEFT JOIN patients p ON p.patient_id = m.patient_id
+                LEFT JOIN doctors d ON d.doctor_id = m.doctor_id
                 WHERE NOT EXISTS (
                     SELECT 1 FROM invoices i WHERE i.record_id = m.record_id
                 )
-                ORDER BY m.visit_date DESC";
+                ORDER BY m.record_id DESC";
         return $this->conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function quote($record_id) {
+        $stmt = $this->conn->prepare(
+            "SELECT m.record_id, m.appointment_id, m.visit_date, m.symptoms, m.diagnosis, m.conclusion,
+                    COALESCE(m.patient_name, p.full_name) AS patient_name,
+                    COALESCE(m.doctor_name, d.full_name) AS doctor_name
+            FROM medical_records m
+            LEFT JOIN patients p ON p.patient_id = m.patient_id
+            LEFT JOIN doctors d ON d.doctor_id = m.doctor_id
+            WHERE m.record_id = :id
+            AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.record_id = m.record_id)"
+        );
+        $stmt->execute(array(':id' => (int) $record_id));
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            return null;
+        }
+        $meds = $this->conn->prepare(
+            "SELECT med.name AS medicine_name, med.unit, med.price,
+                    pd.quantity, pd.dosage, pd.usage_instructions
+            FROM prescriptions pr
+            JOIN prescription_details pd ON pd.prescription_id = pr.prescription_id
+            JOIN medicines med ON med.medicine_id = pd.medicine_id
+            WHERE pr.record_id = :id
+            ORDER BY pd.id"
+        );
+        $meds->execute(array(':id' => (int) $record_id));
+        $lines = $meds->fetchAll(PDO::FETCH_ASSOC);
+        $drugTotal = 0;
+        foreach ($lines as $i => $line) {
+            $amount = (int) $line['quantity'] * (float) $line['price'];
+            $lines[$i]['line_amount'] = $amount;
+            $drugTotal += $amount;
+        }
+        $row['medicines'] = $lines;
+        $row['drug_total'] = $drugTotal;
+        return $row;
     }
 
     public function markPaid($invoice_id) {
@@ -139,5 +179,49 @@ class Invoice {
             }
             return 'Không lập được hóa đơn.';
         }
+    }
+
+    public function fullView($invoice_id, $patient_id = null) {
+        $sql = "SELECT i.invoice_id, i.total_amount, i.payment_method, i.status, i.created_at,
+                    i.record_id,
+                    COALESCE(m.patient_name, p.full_name) AS patient_name,
+                    COALESCE(m.doctor_name, d.full_name) AS doctor_name,
+                    m.appointment_id, m.visit_date, m.symptoms, m.diagnosis, m.conclusion
+                FROM invoices i
+                LEFT JOIN patients p ON p.patient_id = i.patient_id
+                LEFT JOIN medical_records m ON m.record_id = i.record_id
+                LEFT JOIN doctors d ON d.doctor_id = m.doctor_id
+                WHERE i.invoice_id = :id";
+        $params = array(':id' => (int) $invoice_id);
+        if ($patient_id !== null) {
+            $sql .= " AND i.patient_id = :patient_id";
+            $params[':patient_id'] = (int) $patient_id;
+        }
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            return null;
+        }
+        $items = $this->conn->prepare(
+            "SELECT item_type, quantity, price
+            FROM invoice_details WHERE invoice_id = :id ORDER BY invoice_detail_id"
+        );
+        $items->execute(array(':id' => (int) $invoice_id));
+        $row['items'] = $items->fetchAll(PDO::FETCH_ASSOC);
+
+        $meds = $this->conn->prepare(
+            "SELECT med.name AS medicine_name, med.unit, med.price,
+                    pd.quantity, pd.dosage, pd.usage_instructions
+            FROM prescriptions pr
+            JOIN prescription_details pd ON pd.prescription_id = pr.prescription_id
+            JOIN medicines med ON med.medicine_id = pd.medicine_id
+            WHERE pr.record_id = :id
+            ORDER BY pd.id"
+        );
+        $meds->execute(array(':id' => (int) $row['record_id']));
+        $row['medicines'] = $row['record_id'] ? $meds->fetchAll(PDO::FETCH_ASSOC) : array();
+        unset($row['record_id']);
+        return $row;
     }
 }

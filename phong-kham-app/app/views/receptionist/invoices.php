@@ -12,20 +12,25 @@ require_once __DIR__ . '/../partials/navbar.php';
     <form class="card form-narrow" action="/index.php?action=create_invoice" method="POST">
         <label>
             Bệnh án
-            <select name="record_id" required>
+            <select name="record_id" id="bill-record" required>
                 <option value="">Chọn bệnh án</option>
                 <?php foreach ($billable as $row): ?>
                     <option value="<?php echo (int) $row['record_id']; ?>">
                         #<?php echo (int) $row['record_id']; ?>
                         — <?php echo htmlspecialchars((string) $row['patient_name']); ?>
-                        — <?php echo htmlspecialchars((string) $row['diagnosis']); ?>
+                        — BS. <?php echo htmlspecialchars((string) $row['doctor_name']); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
         </label>
+        <div id="bill-preview" class="lead">Chọn bệnh án để xem người khám, chẩn đoán và đơn thuốc.</div>
         <label>
             Phí khám
-            <input type="number" name="exam_fee" min="0" step="1000" value="250000" required>
+            <input type="number" name="exam_fee" id="exam-fee" min="0" step="1000" value="250000" required>
+        </label>
+        <label>
+            Tổng tiền
+            <input type="text" id="bill-total" value="" readonly>
         </label>
         <label>
             Phương thức
@@ -35,7 +40,6 @@ require_once __DIR__ . '/../partials/navbar.php';
                 <option value="Thẻ">Thẻ</option>
             </select>
         </label>
-        <p class="lead">Tiền thuốc được cộng từ đơn, theo giá thuốc hiện tại.</p>
         <p><button class="btn-navy" type="submit">Lập hóa đơn</button></p>
     </form>
 <?php endif; ?>
@@ -56,7 +60,7 @@ require_once __DIR__ . '/../partials/navbar.php';
         <tr><td colspan="7">Chưa có hóa đơn.</td></tr>
     <?php endif; ?>
     <?php foreach ($invoices as $inv): ?>
-    <tr>
+    <tr class="invoice-row" data-invoice-id="<?php echo (int) $inv['invoice_id']; ?>" style="cursor:pointer">
         <td>#<?php echo (int) $inv['invoice_id']; ?></td>
         <td><?php echo htmlspecialchars((string) $inv['patient_name']); ?></td>
         <td><?php echo number_format((float) $inv['total_amount']); ?> đ</td>
@@ -80,6 +84,14 @@ require_once __DIR__ . '/../partials/navbar.php';
     </tr>
     <?php endforeach; ?>
 </table>
+</div>
+
+<div class="modal" id="invoice-detail-modal">
+    <div class="modal-card">
+        <button class="modal-x" type="button" data-close-box>Đóng</button>
+        <h2 id="invoice-detail-title">Chi tiết hóa đơn</h2>
+        <div id="invoice-detail-body"><p class="lead">Đang tải…</p></div>
+    </div>
 </div>
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>

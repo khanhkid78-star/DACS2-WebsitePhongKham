@@ -181,6 +181,20 @@ class RecordController {
             exit();
         }
 
+        $clean = array();
+        foreach ($this->readLines() as $line) {
+            $touched = $line['medicine_id'] || $line['quantity'] || $line['dosage'] !== '' || $line['usage'] !== '';
+            if (!$touched) {
+                continue;
+            }
+            if ($line['medicine_id'] < 1 || $line['quantity'] < 1 || $line['dosage'] === '' || $line['usage'] === '') {
+                Auth::flash('Mỗi dòng thuốc cần đủ thuốc, số lượng, liều và cách dùng.');
+                header('Location: /index.php?action=doctor_records');
+                exit();
+            }
+            $clean[] = $line;
+        }
+
         $doctorFilter = null;
         if (Auth::getRole() === 'doctor') {
             $doctorFilter = (int) ($_SESSION['doctor_id'] ?? 0);
@@ -191,8 +205,7 @@ class RecordController {
             }
         }
 
-        $bag = $this->bag();
-        if ($bag['records']->update($id, $symptoms, $diagnosis, $conclusion, $doctorFilter)) {
+        if ($this->bag()['records']->updateWithPrescription($id, $symptoms, $diagnosis, $conclusion, $doctorFilter, $clean)) {
             Auth::flash('Đã cập nhật bệnh án.', true);
         } else {
             Auth::flash('Không sửa được bệnh án này.');

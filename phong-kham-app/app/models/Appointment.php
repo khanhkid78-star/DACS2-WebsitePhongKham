@@ -97,7 +97,7 @@ class Appointment {
             $sql .= " AND a.doctor_id = :doctor_id";
             $params[':doctor_id'] = $doctor_id;
         }
-        $sql .= " ORDER BY a.appointment_date ASC";
+        $sql .= " ORDER BY a.appointment_date DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -95,7 +95,8 @@ class MedicalRecord {
         }
 
         $medStmt = $this->conn->prepare(
-            "SELECT med.name AS medicine_name,
+            "SELECT pd.medicine_id,
+                    med.name AS medicine_name,
                     med.unit,
                     med.price,
                     pd.quantity,
@@ -129,6 +130,76 @@ class MedicalRecord {
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
         return $stmt->rowCount() > 0;
+    }
+
+    public function updateWithPrescription($record_id, $symptoms, $diagnosis, $conclusion, $doctor_id, $lines) {
+        $this->conn->beginTransaction();
+        try {
+            $sql = "UPDATE " . $this->table_name . "
+                    SET symptoms = :symptoms, diagnosis = :diagnosis, conclusion = :conclusion
+                    WHERE record_id = :id";
+            $params = array(
+                ':symptoms' => $symptoms,
+                ':diagnosis' => $diagnosis,
+                ':conclusion' => $conclusion,
+                ':id' => $record_id,
+            );
+            if ($doctor_id !== null) {
+                $sql .= " AND doctor_id = :doctor_id";
+                $params[':doctor_id'] = $doctor_id;
+            }
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute($params);
+
+            $checkSql = "SELECT 1 FROM " . $this->table_name . " WHERE record_id = :id";
+            $checkParams = array(':id' => $record_id);
+            if ($doctor_id !== null) {
+                $checkSql .= " AND doctor_id = :doctor_id";
+                $checkParams[':doctor_id'] = $doctor_id;
+            }
+            $check = $this->conn->prepare($checkSql);
+            $check->execute($checkParams);
+            if (!$check->fetchColumn()) {
+                $this->conn->rollBack();
+                return false;
+            }
+
+            $this->conn->prepare(
+                "DELETE FROM prescription_details
+                WHERE prescription_id IN (SELECT prescription_id FROM prescriptions WHERE record_id = :id)"
+            )->execute(array(':id' => $record_id));
+            $this->conn->prepare("DELETE FROM prescriptions WHERE record_id = :id")->execute(array(':id' => $record_id));
+
+            if (!empty($lines)) {
+                $prescription = $this->conn->prepare(
+                    "INSERT INTO prescriptions (record_id) VALUES (:record_id) RETURNING prescription_id"
+                );
+                $prescription->execute(array(':record_id' => $record_id));
+                $prescription_id = (int) $prescription->fetchColumn();
+                $detail = $this->conn->prepare(
+                    "INSERT INTO prescription_details
+                        (prescription_id, medicine_id, quantity, dosage, usage_instructions)
+                    VALUES
+                        (:prescription_id, :medicine_id, :quantity, :dosage, :usage)"
+                );
+                foreach ($lines as $line) {
+                    $detail->execute(array(
+                        ':prescription_id' => $prescription_id,
+                        ':medicine_id' => $line['medicine_id'],
+                        ':quantity' => $line['quantity'],
+                        ':dosage' => $line['dosage'],
+                        ':usage' => $line['usage'],
+                    ));
+                }
+            }
+            $this->conn->commit();
+            return true;
+        } catch (Exception $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            return false;
+        }
     }
 
     public function createWithPrescription($data, $lines) {

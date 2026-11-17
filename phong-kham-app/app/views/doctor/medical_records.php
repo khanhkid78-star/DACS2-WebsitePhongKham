@@ -51,6 +51,13 @@ require_once __DIR__ . '/../partials/navbar.php';
         <h2 id="record-title">Ghi bệnh án mới</h2>
         <form id="record-form" action="/index.php?action=save_record" method="POST">
             <input type="hidden" name="record_id" id="record-id" disabled>
+            <div id="record-locked" style="display:none">
+                <label>Mã hồ sơ <input id="lock-record" type="text" disabled></label>
+                <label>Mã lịch <input id="lock-appt" type="text" disabled></label>
+                <label>Bệnh nhân <input id="lock-patient" type="text" disabled></label>
+                <label>Bác sĩ <input id="lock-doctor" type="text" disabled></label>
+                <label>Ngày khám <input id="lock-when" type="text" disabled></label>
+            </div>
             <div id="record-create-fields">
                 <label>Lịch đã duyệt
                     <select name="appointment_id" data-appointment required>

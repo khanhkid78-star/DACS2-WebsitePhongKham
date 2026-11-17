@@ -123,6 +123,12 @@ switch ($action) {
     case 'create_invoice':
         (new InvoiceController())->create();
         break;
+    case 'invoice_preview':
+        (new InvoiceController())->preview();
+        break;
+    case 'invoice_detail':
+        (new InvoiceController())->detail();
+        break;
     case 'pay_invoice':
         (new InvoiceController())->pay();
         break;

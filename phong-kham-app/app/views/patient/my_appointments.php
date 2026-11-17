@@ -116,7 +116,7 @@ require_once __DIR__ . '/../partials/navbar.php';
             </tr>
             <tbody id="mine-invoices">
             <?php foreach ($my_invoices as $inv): ?>
-            <tr>
+            <tr class="invoice-row" data-invoice-id="<?php echo (int) $inv['invoice_id']; ?>" style="cursor:pointer">
                 <td>#<?php echo (int) $inv['invoice_id']; ?></td>
                 <td><?php echo number_format((float) $inv['total_amount']); ?> đ</td>
                 <td><?php echo htmlspecialchars((string) $inv['payment_method']); ?></td>
@@ -135,5 +135,13 @@ require_once __DIR__ . '/../partials/navbar.php';
         </div>
     <?php endif; ?>
 </section>
+
+<div class="modal" id="invoice-detail-modal">
+    <div class="modal-card">
+        <button class="modal-x" type="button" data-close-box>Đóng</button>
+        <h2 id="invoice-detail-title">Chi tiết hóa đơn</h2>
+        <div id="invoice-detail-body"><p class="lead">Đang tải…</p></div>
+    </div>
+</div>
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>

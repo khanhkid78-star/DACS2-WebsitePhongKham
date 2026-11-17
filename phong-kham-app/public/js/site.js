@@ -249,6 +249,61 @@ if (window.jQuery) {
         openBox(jQuery(this).attr("data-open-box"));
     });
 
+    jQuery(document).on("click", "tr.invoice-row", function (e) {
+        if (jQuery(e.target).closest("button, a, form").length) return;
+        var id = jQuery(this).attr("data-invoice-id");
+        if (!id) return;
+        jQuery("#invoice-detail-title").text("Hóa đơn #" + id);
+        jQuery("#invoice-detail-body").html("<p class=\"lead\">Đang tải…</p>");
+        openBox("invoice-detail-modal");
+        jQuery.getJSON("/index.php?action=invoice_detail&id=" + encodeURIComponent(id))
+            .done(function (res) {
+                if (!res || !res.ok || !res.data) {
+                    jQuery("#invoice-detail-body").html("<p class=\"lead\">Không tải được hóa đơn.</p>");
+                    return;
+                }
+                var d = res.data;
+                var paid = d.status === "Paid" ? "Đã thanh toán" : "Chưa thanh toán";
+                var html = "";
+                html += "<p><strong>Bệnh nhân:</strong> " + esc(d.patient_name || "") + "</p>";
+                html += "<p><strong>Bác sĩ:</strong> " + esc(d.doctor_name || "") + "</p>";
+                html += "<p><strong>Ngày khám:</strong> " + esc(fmtWhen(d.visit_date)) + "</p>";
+                if (d.appointment_id) html += "<p><strong>Mã lịch:</strong> #" + esc(String(d.appointment_id)) + "</p>";
+                html += "<p><strong>Triệu chứng:</strong><br>" + esc(d.symptoms || "").replace(/\n/g, "<br>") + "</p>";
+                html += "<p><strong>Chẩn đoán:</strong><br>" + esc(d.diagnosis || "").replace(/\n/g, "<br>") + "</p>";
+                html += "<p><strong>Kết luận:</strong><br>" + esc(d.conclusion || "").replace(/\n/g, "<br>") + "</p>";
+                html += "<h3>Đơn thuốc</h3>";
+                var meds = d.medicines || [];
+                if (!meds.length) {
+                    html += "<p class=\"lead\">Không có đơn thuốc.</p>";
+                } else {
+                    html += "<div class=\"table-wrap\"><table><thead><tr><th>Thuốc</th><th>Đơn vị</th><th>SL</th><th>Liều</th><th>Cách dùng</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead><tbody>";
+                    meds.forEach(function (m) {
+                        var amount = Number(m.quantity || 0) * Number(m.price || 0);
+                        html += "<tr><td>" + esc(m.medicine_name || "") + "</td><td>" + esc(m.unit || "") + "</td>";
+                        html += "<td>" + esc(String(m.quantity || "")) + "</td><td>" + esc(m.dosage || "") + "</td>";
+                        html += "<td>" + esc(m.usage_instructions || "") + "</td><td>" + esc(vnd(m.price)) + "</td><td>" + esc(vnd(amount)) + "</td></tr>";
+                    });
+                    html += "</tbody></table></div>";
+                }
+                html += "<h3>Các khoản thu</h3>";
+                html += "<div class=\"table-wrap\"><table><thead><tr><th>Hạng mục</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead><tbody>";
+                (d.items || []).forEach(function (item) {
+                    var amount = Number(item.quantity || 0) * Number(item.price || 0);
+                    html += "<tr><td>" + esc(item.item_type || "") + "</td><td>" + esc(String(item.quantity || "")) + "</td>";
+                    html += "<td>" + esc(vnd(item.price)) + "</td><td>" + esc(vnd(amount)) + "</td></tr>";
+                });
+                html += "</tbody></table></div>";
+                html += "<p><strong>Tổng tiền:</strong> " + esc(vnd(d.total_amount)) + " đ</p>";
+                html += "<p><strong>Phương thức:</strong> " + esc(d.payment_method || "") + "</p>";
+                html += "<p><strong>Trạng thái:</strong> " + esc(paid) + "</p>";
+                jQuery("#invoice-detail-body").html(html);
+            })
+            .fail(function () {
+                jQuery("#invoice-detail-body").html("<p class=\"lead\">Lỗi kết nối.</p>");
+            });
+    });
+
     jQuery(document).on("click", "[data-appt]", function () {
         var data = JSON.parse(jQuery(this).attr("data-appt"));
         if (data.status === "Cancelled") {
@@ -271,13 +326,62 @@ if (window.jQuery) {
         openBox("appt-modal");
     });
 
+    function clearRx() {
+        var box = document.getElementById("rx-lines");
+        if (!box) return;
+        var rows = box.querySelectorAll("[data-line]");
+        for (var i = 1; i < rows.length; i++) rows[i].remove();
+        var first = box.querySelector("[data-line]");
+        if (!first) return;
+        first.querySelectorAll("input, select, textarea").forEach(function (field) {
+            if (field.type === "checkbox") field.checked = false;
+            else if (field.tagName === "SELECT") field.selectedIndex = 0;
+            else field.value = "";
+        });
+    }
+
+    function fillRx(lines) {
+        clearRx();
+        var box = document.getElementById("rx-lines");
+        var first = box ? box.querySelector("[data-line]") : null;
+        if (!first || !lines || !lines.length) return;
+        lines.forEach(function (line, index) {
+            var row = index === 0 ? first : first.cloneNode(true);
+            if (index > 0) box.appendChild(row);
+            var tick = row.querySelector("[data-line-check]");
+            if (tick) tick.checked = false;
+            var med = row.querySelector("select[name='medicine_id[]']");
+            var qty = row.querySelector("input[name='quantity[]']");
+            var dose = row.querySelector("input[name='dosage[]']");
+            var use = row.querySelector("input[name='usage[]']");
+            if (med) med.value = String(line.medicine_id || "");
+            if (qty) qty.value = line.quantity || "";
+            if (dose) dose.value = line.dosage || "";
+            if (use) use.value = line.usage_instructions || "";
+        });
+    }
+
+    function fmtWhen(value) {
+        var visit = value ? new Date(value) : null;
+        if (!visit || isNaN(visit.getTime())) return value || "";
+        return ("0" + visit.getHours()).slice(-2) + ":" + ("0" + visit.getMinutes()).slice(-2) + " "
+            + ("0" + visit.getDate()).slice(-2) + "/" + ("0" + (visit.getMonth() + 1)).slice(-2) + "/" + visit.getFullYear();
+    }
+
+    function vnd(n) {
+        var x = Math.round(Number(n) || 0);
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
     jQuery("#open-new-record").on("click", function () {
         jQuery("#record-title").text("Ghi bệnh án mới");
         jQuery("#record-form").attr("action", "/index.php?action=save_record");
-        jQuery("#record-id").prop("disabled", true);
+        jQuery("#record-id").prop("disabled", true).val("");
+        jQuery("#record-locked").hide();
         jQuery("#record-create-fields, #record-rx").show();
-        jQuery("#record-create-fields select").prop("disabled", false);
+        jQuery("#record-create-fields select").prop("disabled", false).val("");
         jQuery("#record-symptoms, #record-diagnosis, #record-conclusion").val("");
+        clearRx();
         jQuery("#record-submit").text("Lưu bệnh án");
         openBox("record-modal");
     });
@@ -287,13 +391,30 @@ if (window.jQuery) {
         jQuery("#record-title").text("Sửa bệnh án #" + data.id);
         jQuery("#record-form").attr("action", "/index.php?action=update_record");
         jQuery("#record-id").prop("disabled", false).val(data.id);
-        jQuery("#record-create-fields, #record-rx").hide();
+        jQuery("#record-create-fields").hide();
         jQuery("#record-create-fields select").prop("disabled", true);
+        jQuery("#record-rx").show();
         jQuery("#record-symptoms").val(data.symptoms);
         jQuery("#record-diagnosis").val(data.diagnosis);
         jQuery("#record-conclusion").val(data.conclusion);
         jQuery("#record-submit").text("Cập nhật");
+        jQuery("#lock-record").val("#" + data.id);
+        jQuery("#record-locked").show();
+        clearRx();
         openBox("record-modal");
+        jQuery.getJSON("/index.php?action=record_detail&id=" + encodeURIComponent(data.id))
+            .done(function (res) {
+                if (!res || !res.ok || !res.data) return;
+                var d = res.data;
+                jQuery("#lock-appt").val(d.appointment_id ? ("#" + d.appointment_id) : "");
+                jQuery("#lock-patient").val(d.patient_name || "");
+                jQuery("#lock-doctor").val(d.doctor_name || "");
+                jQuery("#lock-when").val(fmtWhen(d.visit_date));
+                jQuery("#record-symptoms").val(d.symptoms || "");
+                jQuery("#record-diagnosis").val(d.diagnosis || "");
+                jQuery("#record-conclusion").val(d.conclusion || "");
+                fillRx(d.medicines || []);
+            });
     });
 
     // Click cả row (trừ nút Sửa) → popup chi tiết hồ sơ + đơn thuốc
@@ -470,5 +591,59 @@ if (window.jQuery) {
             if (!id || !options.url) return;
             options.url += (options.url.indexOf("?") === -1 ? "?" : "&") + "tab=" + encodeURIComponent(id);
         });
+        
+
+        var billRecord = document.getElementById("bill-record");
+        var billState = { drugTotal: 0 };
+        function paintBillTotal() {
+            var fee = Number(jQuery("#exam-fee").val() || 0);
+            if (fee < 0) fee = 0;
+            jQuery("#bill-total").val(vnd(fee + billState.drugTotal) + " đ");
+        }
+        if (billRecord) {
+            jQuery("#exam-fee").on("input", paintBillTotal);
+            jQuery(billRecord).on("change", function () {
+                var id = jQuery(this).val();
+                billState.drugTotal = 0;
+                if (!id) {
+                    jQuery("#bill-preview").html("Chọn bệnh án để xem người khám, chẩn đoán và đơn thuốc.");
+                    jQuery("#bill-total").val("");
+                    return;
+                }
+                jQuery.getJSON("/index.php?action=invoice_preview&record_id=" + encodeURIComponent(id))
+                    .done(function (res) {
+                        if (!res || !res.ok || !res.data) {
+                            jQuery("#bill-preview").html("Không lấy được bệnh án này.");
+                            return;
+                        }
+                        var d = res.data;
+                        billState.drugTotal = Number(d.drug_total || 0);
+                        var html = "";
+                        html += "<p><strong>Bệnh nhân:</strong> " + esc(d.patient_name || "") + "</p>";
+                        html += "<p><strong>Bác sĩ:</strong> " + esc(d.doctor_name || "") + "</p>";
+                        html += "<p><strong>Ngày khám:</strong> " + esc(fmtWhen(d.visit_date)) + "</p>";
+                        html += "<p><strong>Mã lịch:</strong> #" + esc(String(d.appointment_id || "")) + "</p>";
+                        html += "<p><strong>Triệu chứng:</strong> " + esc(d.symptoms || "") + "</p>";
+                        html += "<p><strong>Chẩn đoán:</strong> " + esc(d.diagnosis || "") + "</p>";
+                        html += "<p><strong>Kết luận:</strong> " + esc(d.conclusion || "") + "</p>";
+                        var meds = d.medicines || [];
+                        if (!meds.length) {
+                            html += "<p>Không có đơn thuốc. Tiền thuốc = 0.</p>";
+                        } else {
+                            html += "<div class=\"table-wrap\"><table><thead><tr><th>Thuốc</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead><tbody>";
+                            meds.forEach(function (m) {
+                                html += "<tr><td>" + esc(m.medicine_name || "") + " (" + esc(m.unit || "") + ")</td>";
+                                html += "<td>" + esc(String(m.quantity || "")) + "</td>";
+                                html += "<td>" + esc(vnd(m.price)) + "</td>";
+                                html += "<td>" + esc(vnd(m.line_amount)) + "</td></tr>";
+                            });
+                            html += "</tbody></table></div>";
+                            html += "<p><strong>Tiền thuốc:</strong> " + esc(vnd(d.drug_total)) + " đ</p>";
+                        }
+                        jQuery("#bill-preview").html(html);
+                        paintBillTotal();
+                    });
+            });
+        }
     }
 }
