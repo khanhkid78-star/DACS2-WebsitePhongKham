@@ -67,11 +67,25 @@ class InvoiceController {
                     . "Tổng cộng: " . $amount . " đ\n\n"
                     . "Quý khách thanh toán tại quầy lễ tân. Hotline: 0931 999 309.\n\n"
                     . "Trân trọng,\nPhòng Khám Đa Khoa Hưng Định\n128 Nguyễn Văn Trỗi, Phú Nhuận, TP. Hồ Chí Minh";
-                Notify::mailPatient($db, (int) $info['patient_id'], 'Hóa đơn #' . (int) ($bill['invoice_id'] ?? 0) . ' - Phòng Khám Hưng Định', $letter);
+                
             }
         }
+        $info['email_subject'] = 'Hóa đơn #' . (int) ($bill['invoice_id'] ?? 0) . ' - Phòng Khám Hưng Định';
+        $info['email_letter'] = $letter;
+        
         Auth::flash($message === '' ? 'Đã lập hóa đơn.' : $message, $message === '');
-        header('Location: /index.php?action=invoices');
+        $target = '/index.php?action=invoices';
+        $tab = Auth::currentTab();
+        if ($tab !== '') {
+            $target .= '&tab=' . urlencode($tab);
+        }
+        header('Location: ' . $target);
+        if ($message === '' && !empty($info['email_letter']) && function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+        if ($message === '' && !empty($info['email_letter'])) {
+            Notify::mailPatient($db, (int) $info['patient_id'], $info['email_subject'], $info['email_letter']);
+        }
         exit();
     }
 

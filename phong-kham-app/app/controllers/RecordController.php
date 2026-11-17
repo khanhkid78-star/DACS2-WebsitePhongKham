@@ -95,6 +95,7 @@ class RecordController {
             $clean[] = $line;
         }
 
+        $pendingMail = null;
         try {
             $recordId = $bag['records']->createWithPrescription(array(
                 'patient_id' => (int) $appointment['patient_id'],
@@ -152,8 +153,13 @@ class RecordController {
                     . "Lịch này đã chuyển sang trạng thái Đã khám xong. Quý khách đăng nhập để xem bệnh án và hóa đơn khi lễ tân lập.\n"
                     . "Dùng thuốc đúng liều. Nếu triệu chứng nặng hơn, gọi 0931 999 309.\n\n"
                     . "Trân trọng,\nPhòng Khám Đa Khoa Hưng Định\n128 Nguyễn Văn Trỗi, Phú Nhuận, TP. Hồ Chí Minh";
-                $sent = Notify::mailPatient($db, (int) $appointment['patient_id'], 'Kết quả khám #' . $recordId . ' - Phòng Khám Hưng Định', $letter);
-                Auth::flash($sent ? 'Đã lưu bệnh án, chuyển lịch sang đã khám xong và gửi email cho bệnh nhân.' : 'Đã lưu bệnh án và chuyển trạng thái. Email chưa gửi được.', $sent);
+                    $pendingMail = array(
+                        'db' => $db,
+                        'patient_id' => (int) $appointment['patient_id'],
+                        'subject' => 'Kết quả khám #' . $recordId . ' - Phòng Khám Hưng Định',
+                        'letter' => $letter,
+                    );
+                    Auth::flash('Đã lưu bệnh án. Lịch chuyển sang đã khám xong.', true);
 
             } else {
                 Auth::flash('Lịch này đã có bệnh án.');
@@ -161,7 +167,18 @@ class RecordController {
         } catch (Exception $e) {
             Auth::flash('Không lưu được bệnh án.');
         }
-        header('Location: /index.php?action=doctor_records');
+        $target = '/index.php?action=doctor_records';
+        $tab = Auth::currentTab();
+        if ($tab !== '') {
+            $target .= '&tab=' . urlencode($tab);
+        }
+        header('Location: ' . $target);
+        if ($pendingMail && function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+        if ($pendingMail) {
+            Notify::mailPatient($pendingMail['db'], $pendingMail['patient_id'], $pendingMail['subject'], $pendingMail['letter']);
+        }
         exit();
     }
 

@@ -177,7 +177,7 @@ class Invoice {
             if ($this->conn->inTransaction()) {
                 $this->conn->rollBack();
             }
-            return 'Không lập được hóa đơn.';
+            return 'Không lập được hóa đơn. ' . $e->getMessage();
         }
     }
 

@@ -171,7 +171,12 @@ class Auth {
         if (!hash_equals(hash_hmac('sha256', $parts[0], self::SECRET), $parts[1])) {
             return array();
         }
-        $data = json_decode(base64_decode(strtr($parts[0], '-_', '+/')), true);
+        $raw = strtr($parts[0], '-_', '+/');
+        $pad = strlen($raw) % 4;
+        if ($pad) {
+            $raw .= str_repeat('=', 4 - $pad);
+        }
+        $data = json_decode(base64_decode($raw), true);
         return (is_array($data) && isset($data['tabs']) && is_array($data['tabs'])) ? $data['tabs'] : array();
     }
 
@@ -187,7 +192,7 @@ class Auth {
         setcookie(self::COOKIE, $body . '.' . $sig, array(
             'expires' => time() + (60 * 60 * 24 * self::DAYS),
             'path' => '/',
-            'secure' => true,
+            'secure' => self::https(),
             'httponly' => true,
             'samesite' => 'Lax',
         ));
