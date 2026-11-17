@@ -24,6 +24,11 @@ class InvoiceController {
         }
         $recordId = (int) ($_POST['record_id'] ?? 0);
         $message = $this->model()->createFromRecord($recordId, $_POST['exam_fee'] ?? '', $_POST['payment_method'] ?? '');
+
+        $mailPatientId = 0;
+        $emailSubject = '';
+        $emailLetter = '';
+
         if ($message === '') {
             $db = (new Database())->getConnection();
             $row = $db->prepare("SELECT patient_id, patient_name FROM medical_records WHERE record_id = :id");
@@ -32,7 +37,7 @@ class InvoiceController {
             if ($info) {
                 require_once __DIR__ . '/../helpers/Notify.php';
                 $inv = $db->prepare(
-                    "SELECT invoice_id, total_amount, payment_method, status
+                    "SELECT invoice_id, total_amount, payment_method
                     FROM invoices WHERE record_id = :id ORDER BY invoice_id DESC LIMIT 1"
                 );
                 $inv->execute(array(':id' => $recordId));
@@ -45,21 +50,24 @@ class InvoiceController {
                 }
                 $amount = $bill ? number_format((float) $bill['total_amount'], 0, ',', '.') : '0';
                 $method = $bill['payment_method'] ?? '';
+                $invoiceId = (int) ($bill['invoice_id'] ?? 0);
                 Notify::send(
                     $db,
                     'patient',
                     (int) $info['patient_id'],
                     'Có hóa đơn cần thanh toán',
-                    'Hóa đơn #' . (int) ($bill['invoice_id'] ?? 0) . ' tổng ' . $amount . ' đ, thanh toán bằng ' . $method . ', hiện chưa thu. Xem mục Hóa đơn.',
+                    'Hóa đơn #' . $invoiceId . ' tổng ' . $amount . ' đ, thanh toán bằng ' . $method . ', hiện chưa thu. Xem mục Hóa đơn.',
                     '/index.php?action=my_appointments#hoa-don'
                 );
                 $rows = '';
                 foreach ($lines as $line) {
                     $rows .= '- ' . $line['item_type'] . ': ' . (int) $line['quantity'] . ' x ' . number_format((float) $line['price'], 0, ',', '.') . " đ\n";
                 }
-                $letter = "Kính gửi " . $info['patient_name'] . ",\n\n"
+                $mailPatientId = (int) $info['patient_id'];
+                $emailSubject = 'Hóa đơn #' . $invoiceId . ' - Phòng Khám Hưng Định';
+                $emailLetter = "Kính gửi " . $info['patient_name'] . ",\n\n"
                     . "Phòng Khám Đa Khoa Hưng Định đã lập hóa đơn cho buổi khám của quý khách.\n\n"
-                    . "Mã hóa đơn: #" . (int) ($bill['invoice_id'] ?? 0) . "\n"
+                    . "Mã hóa đơn: #" . $invoiceId . "\n"
                     . "Mã bệnh án: #" . $recordId . "\n"
                     . "Hình thức: " . $method . "\n"
                     . "Trạng thái: Chưa thanh toán\n\n"
@@ -67,12 +75,9 @@ class InvoiceController {
                     . "Tổng cộng: " . $amount . " đ\n\n"
                     . "Quý khách thanh toán tại quầy lễ tân. Hotline: 0931 999 309.\n\n"
                     . "Trân trọng,\nPhòng Khám Đa Khoa Hưng Định\n128 Nguyễn Văn Trỗi, Phú Nhuận, TP. Hồ Chí Minh";
-                
             }
         }
-        $info['email_subject'] = 'Hóa đơn #' . (int) ($bill['invoice_id'] ?? 0) . ' - Phòng Khám Hưng Định';
-        $info['email_letter'] = $letter;
-        
+
         Auth::flash($message === '' ? 'Đã lập hóa đơn.' : $message, $message === '');
         $target = '/index.php?action=invoices';
         $tab = Auth::currentTab();
@@ -80,11 +85,11 @@ class InvoiceController {
             $target .= '&tab=' . urlencode($tab);
         }
         header('Location: ' . $target);
-        if ($message === '' && !empty($info['email_letter']) && function_exists('fastcgi_finish_request')) {
+        if ($emailLetter !== '' && function_exists('fastcgi_finish_request')) {
             fastcgi_finish_request();
         }
-        if ($message === '' && !empty($info['email_letter'])) {
-            Notify::mailPatient($db, (int) $info['patient_id'], $info['email_subject'], $info['email_letter']);
+        if ($emailLetter !== '') {
+            Notify::mailPatient($db, $mailPatientId, $emailSubject, $emailLetter);
         }
         exit();
     }
