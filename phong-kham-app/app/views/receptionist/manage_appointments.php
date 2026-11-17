@@ -69,11 +69,10 @@ require_once __DIR__ . '/../partials/navbar.php';
             </label>
             <label>Trạng thái
                 <select name="status" id="appt-status">
-                    <option value="Pending">Chờ duyệt</option>
                     <option value="Scheduled">Đã lên lịch</option>
-                    <option value="Completed">Đã khám xong</option>
                     <option value="Cancelled">Đã hủy</option>
                 </select>
+                <p id="appt-status-lock" class="lead" style="display:none">Lịch đã có bệnh án, trạng thái giữ là Đã khám xong.</p>
             </label>
             <p><button class="btn-navy" type="submit">Lưu dòng này</button></p>
         </form>

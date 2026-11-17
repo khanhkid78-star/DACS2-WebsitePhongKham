@@ -7,9 +7,23 @@ class Mailer {
         if (MailConfig::USER === '' || MailConfig::PASS === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
             return false;
         }
+        $socket = null;
         try {
             $from = MailConfig::FROM !== '' ? MailConfig::FROM : MailConfig::USER;
-            $socket = @stream_socket_client('ssl://' . MailConfig::HOST . ':' . (int) MailConfig::PORT, $errno, $errstr, 20);
+            $context = stream_context_create(array(
+                'ssl' => array(
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                ),
+            ));
+            $socket = @stream_socket_client(
+                'ssl://' . MailConfig::HOST . ':' . (int) MailConfig::PORT,
+                $errno,
+                $errstr,
+                20,
+                STREAM_CLIENT_CONNECT,
+                $context
+            );
             if (!$socket) {
                 return false;
             }
@@ -22,19 +36,37 @@ class Mailer {
             self::cmd($socket, 'MAIL FROM:<' . $from . '>', '250');
             self::cmd($socket, 'RCPT TO:<' . $to . '>', '250');
             self::cmd($socket, 'DATA', '354');
-            $body = 'From: ' . MailConfig::FROM_NAME . ' <' . $from . ">\r\n";
+
+            $safe = str_replace("\r\n", "\n", (string) $text);
+            $safe = str_replace("\r", "\n", $safe);
+            $lines = explode("\n", $safe);
+            foreach ($lines as $i => $line) {
+                if (isset($line[0]) && $line[0] === '.') {
+                    $lines[$i] = '.' . $line;
+                }
+            }
+            $body = 'From: ' . self::headerName(MailConfig::FROM_NAME) . ' <' . $from . ">\r\n";
             $body .= 'To: <' . $to . ">\r\n";
             $body .= 'Subject: =?UTF-8?B?' . base64_encode($subject) . "?=\r\n";
-            $body .= "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n";
-            $body .= str_replace("\n", "\r\n", str_replace("\r\n", "\n", $text)) . "\r\n.\r\n";
+            $body .= "MIME-Version: 1.0\r\n";
+            $body .= "Content-Type: text/plain; charset=UTF-8\r\n";
+            $body .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
+            $body .= implode("\r\n", $lines) . "\r\n.\r\n";
             fwrite($socket, $body);
             self::expect($socket, '250');
             self::cmd($socket, 'QUIT', '221');
             fclose($socket);
             return true;
         } catch (Exception $e) {
+            if (is_resource($socket)) {
+                fclose($socket);
+            }
             return false;
         }
+    }
+
+    private static function headerName($name) {
+        return '=?UTF-8?B?' . base64_encode($name) . '?=';
     }
 
     private static function cmd($socket, $line, $expect) {

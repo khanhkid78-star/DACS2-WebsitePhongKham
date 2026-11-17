@@ -25,6 +25,10 @@ if (empty($appointments)): ?>
         <td><?php echo date('H:i d/m/Y', strtotime($app['appointment_date'])); ?></td>
         <td class="clip" title="<?php echo htmlspecialchars((string) $app['note']); ?>"><?php echo htmlspecialchars((string) $app['note']); ?></td>
         <td><span class="badge <?php echo $st[1]; ?>"><?php echo htmlspecialchars((string) $st[0]); ?></span></td>
-        <td><button class="btn-ghost" type="button" data-appt="<?php echo $payload; ?>">Sửa</button></td>
+        <td>
+            <?php if ($app['status'] !== 'Cancelled'): ?>
+                <button class="btn-ghost" type="button" data-appt="<?php echo $payload; ?>">Sửa</button>
+            <?php endif; ?>
+        </td>
     </tr>
 <?php endforeach; endif; ?>

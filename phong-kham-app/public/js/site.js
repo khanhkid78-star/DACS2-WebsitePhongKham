@@ -251,12 +251,23 @@ if (window.jQuery) {
 
     jQuery(document).on("click", "[data-appt]", function () {
         var data = JSON.parse(jQuery(this).attr("data-appt"));
+        if (data.status === "Cancelled") {
+            return;
+        }
         jQuery("#appt-id").val(data.id);
         jQuery("#appt-label").text(data.id);
         jQuery("#appt-doctor").val(String(data.doctor_id));
         jQuery("#appt-date").val(data.date);
         jQuery("#appt-note").val(data.note);
-        jQuery("#appt-status").val(data.status);
+        jQuery("#appt-status-fixed").remove();
+        if (data.status === "Completed") {
+            jQuery("#appt-status").val("Scheduled").prop("disabled", true).removeAttr("name");
+            jQuery("#appt-status").after('<input type="hidden" name="status" id="appt-status-fixed" value="Completed">');
+            jQuery("#appt-status-lock").show();
+        } else {
+            jQuery("#appt-status").attr("name", "status").prop("disabled", false).val("Scheduled");
+            jQuery("#appt-status-lock").hide();
+        }
         openBox("appt-modal");
     });
 

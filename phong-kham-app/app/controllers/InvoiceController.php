@@ -31,7 +31,43 @@ class InvoiceController {
             $info = $row->fetch(PDO::FETCH_ASSOC);
             if ($info) {
                 require_once __DIR__ . '/../helpers/Notify.php';
-                Notify::send($db, 'patient', (int) $info['patient_id'], 'Có hóa đơn mới', 'Phòng khám đã lập hóa đơn cho ' . $info['patient_name'] . '.', '/index.php?action=my_appointments#hoa-don');
+                $inv = $db->prepare(
+                    "SELECT invoice_id, total_amount, payment_method, status
+                    FROM invoices WHERE record_id = :id ORDER BY invoice_id DESC LIMIT 1"
+                );
+                $inv->execute(array(':id' => $recordId));
+                $bill = $inv->fetch(PDO::FETCH_ASSOC);
+                $lines = array();
+                if ($bill) {
+                    $detail = $db->prepare("SELECT item_type, quantity, price FROM invoice_details WHERE invoice_id = :id ORDER BY invoice_detail_id");
+                    $detail->execute(array(':id' => $bill['invoice_id']));
+                    $lines = $detail->fetchAll(PDO::FETCH_ASSOC);
+                }
+                $amount = $bill ? number_format((float) $bill['total_amount'], 0, ',', '.') : '0';
+                $method = $bill['payment_method'] ?? '';
+                Notify::send(
+                    $db,
+                    'patient',
+                    (int) $info['patient_id'],
+                    'Có hóa đơn cần thanh toán',
+                    'Hóa đơn #' . (int) ($bill['invoice_id'] ?? 0) . ' tổng ' . $amount . ' đ, thanh toán bằng ' . $method . ', hiện chưa thu. Xem mục Hóa đơn.',
+                    '/index.php?action=my_appointments#hoa-don'
+                );
+                $rows = '';
+                foreach ($lines as $line) {
+                    $rows .= '- ' . $line['item_type'] . ': ' . (int) $line['quantity'] . ' x ' . number_format((float) $line['price'], 0, ',', '.') . " đ\n";
+                }
+                $letter = "Kính gửi " . $info['patient_name'] . ",\n\n"
+                    . "Phòng Khám Đa Khoa Hưng Định đã lập hóa đơn cho buổi khám của quý khách.\n\n"
+                    . "Mã hóa đơn: #" . (int) ($bill['invoice_id'] ?? 0) . "\n"
+                    . "Mã bệnh án: #" . $recordId . "\n"
+                    . "Hình thức: " . $method . "\n"
+                    . "Trạng thái: Chưa thanh toán\n\n"
+                    . "Chi tiết:\n" . ($rows !== '' ? $rows : "- Chưa có dòng chi tiết.\n") . "\n"
+                    . "Tổng cộng: " . $amount . " đ\n\n"
+                    . "Quý khách thanh toán tại quầy lễ tân. Hotline: 0931 999 309.\n\n"
+                    . "Trân trọng,\nPhòng Khám Đa Khoa Hưng Định\n128 Nguyễn Văn Trỗi, Phú Nhuận, TP. Hồ Chí Minh";
+                Notify::mailPatient($db, (int) $info['patient_id'], 'Hóa đơn #' . (int) ($bill['invoice_id'] ?? 0) . ' - Phòng Khám Hưng Định', $letter);
             }
         }
         Auth::flash($message === '' ? 'Đã lập hóa đơn.' : $message, $message === '');
@@ -53,7 +89,34 @@ class InvoiceController {
             
             if ($info) {
                 require_once __DIR__ . '/../helpers/Notify.php';
-                Notify::send($db, 'patient', (int) $info['patient_id'], 'Đã thu hóa đơn', 'Hóa đơn ' . number_format((float) $info['total_amount']) . ' đ đã được thu.', '/index.php?action=my_appointments#hoa-don');
+                $more = $db->prepare(
+                    "SELECT i.invoice_id, i.total_amount, i.payment_method, p.full_name
+                    FROM invoices i
+                    LEFT JOIN patients p ON p.patient_id = i.patient_id
+                    WHERE i.invoice_id = :id"
+                );
+                $more->execute(array(':id' => (int) ($_POST['invoice_id'] ?? 0)));
+                $bill = $more->fetch(PDO::FETCH_ASSOC);
+                if ($bill) {
+                    $amount = number_format((float) $bill['total_amount'], 0, ',', '.');
+                    Notify::send(
+                        $db,
+                        'patient',
+                        (int) $info['patient_id'],
+                        'Đã thanh toán hóa đơn',
+                        'Hóa đơn #' . (int) $bill['invoice_id'] . ' đã thu ' . $amount . ' đ bằng ' . $bill['payment_method'] . '.',
+                        '/index.php?action=my_appointments#hoa-don'
+                    );
+                    $letter = "Kính gửi " . ($bill['full_name'] ?: 'quý khách') . ",\n\n"
+                        . "Phòng Khám Đa Khoa Hưng Định đã nhận thanh toán.\n\n"
+                        . "Mã hóa đơn: #" . (int) $bill['invoice_id'] . "\n"
+                        . "Số tiền: " . $amount . " đ\n"
+                        . "Hình thức: " . $bill['payment_method'] . "\n"
+                        . "Trạng thái: Đã thanh toán\n\n"
+                        . "Cảm ơn quý khách đã sử dụng dịch vụ. Giữ thư này như biên nhận.\n\n"
+                        . "Trân trọng,\nPhòng Khám Đa Khoa Hưng Định\n128 Nguyễn Văn Trỗi, Phú Nhuận, TP. Hồ Chí Minh\nHotline: 0931 999 309";
+                    Notify::mailPatient($db, (int) $info['patient_id'], 'Biên nhận hóa đơn #' . (int) $bill['invoice_id'] . ' - Phòng Khám Hưng Định', $letter);
+                }
             }
 
             Auth::flash('Đã xác nhận thu tiền.', true);

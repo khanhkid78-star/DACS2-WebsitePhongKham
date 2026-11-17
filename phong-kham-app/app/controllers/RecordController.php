@@ -110,16 +110,51 @@ class RecordController {
 
             if ($recordId) {
                 require_once __DIR__ . '/../helpers/Notify.php';
+                $db = (new Database())->getConnection();
+                $when = date('H:i d/m/Y', strtotime($appointment['appointment_date']));
                 Notify::send(
-                    (new Database())->getConnection(),
+                    $db,
                     'patient',
                     (int) $appointment['patient_id'],
-                    'Đã có bệnh án',
-                    'Bệnh án với BS. ' . $appointment['doctor_name'] . ' đã được lưu.',
+                    'Đã có kết quả khám',
+                    'BS. ' . $appointment['doctor_name'] . ' đã ghi bệnh án buổi ' . $when . '. Chẩn đoán: ' . $diagnosis . '. Xem mục Bệnh án sau khi đăng nhập.',
                     '/index.php?action=my_appointments#ho-so'
                 );
+                Notify::send(
+                    $db,
+                    'receptionists',
+                    0,
+                    'Bệnh nhân đã khám xong',
+                    $appointment['patient_name'] . ' đã khám xong với BS. ' . $appointment['doctor_name'] . ' (lịch #' . (int) $appointment['appointment_id'] . '). Có thể lập hóa đơn.',
+                    '/index.php?action=invoices'
+                );
+                $rx = '';
+                if ($clean) {
+                    $names = $db->prepare("SELECT medicine_id, name, unit FROM medicines WHERE medicine_id = :id");
+                    foreach ($clean as $line) {
+                        $names->execute(array(':id' => $line['medicine_id']));
+                        $med = $names->fetch(PDO::FETCH_ASSOC);
+                        $rx .= '- ' . ($med['name'] ?? 'Thuốc') . ' (' . ($med['unit'] ?? '') . '): ' . $line['quantity'] . ', liều ' . $line['dosage'] . '. ' . $line['usage'] . "\n";
+                    }
+                } else {
+                    $rx = "- Chưa kê đơn thuốc.\n";
+                }
+                $letter = "Kính gửi " . $appointment['patient_name'] . ",\n\n"
+                    . "Phòng Khám Đa Khoa Hưng Định đã lưu hồ sơ buổi khám của quý khách.\n\n"
+                    . "Mã hồ sơ: #" . $recordId . "\n"
+                    . "Mã lịch: #" . (int) $appointment['appointment_id'] . "\n"
+                    . "Bác sĩ: " . $appointment['doctor_name'] . "\n"
+                    . "Thời gian khám: " . $when . "\n"
+                    . "Triệu chứng: " . $symptoms . "\n"
+                    . "Chẩn đoán: " . $diagnosis . "\n"
+                    . "Kết luận: " . $conclusion . "\n\n"
+                    . "Đơn thuốc:\n" . $rx . "\n"
+                    . "Lịch này đã chuyển sang trạng thái Đã khám xong. Quý khách đăng nhập để xem bệnh án và hóa đơn khi lễ tân lập.\n"
+                    . "Dùng thuốc đúng liều. Nếu triệu chứng nặng hơn, gọi 0931 999 309.\n\n"
+                    . "Trân trọng,\nPhòng Khám Đa Khoa Hưng Định\n128 Nguyễn Văn Trỗi, Phú Nhuận, TP. Hồ Chí Minh";
+                $sent = Notify::mailPatient($db, (int) $appointment['patient_id'], 'Kết quả khám #' . $recordId . ' - Phòng Khám Hưng Định', $letter);
+                Auth::flash($sent ? 'Đã lưu bệnh án, chuyển lịch sang đã khám xong và gửi email cho bệnh nhân.' : 'Đã lưu bệnh án và chuyển trạng thái. Email chưa gửi được.', $sent);
 
-                Auth::flash('Đã lưu bệnh án. Lịch chuyển sang đã khám xong.', true);
             } else {
                 Auth::flash('Lịch này đã có bệnh án.');
             }

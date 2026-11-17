@@ -50,14 +50,25 @@ class Appointment {
 
     // Cập nhật trạng thái duyệt lịch (Scheduled / Cancelled)
     public function updateStatus($appointment_id, $status) {
-        $query = "UPDATE " . $this->table_name . " SET status = :status WHERE appointment_id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":status", $status);
-        $stmt->bindParam(":id", $appointment_id, PDO::PARAM_INT);
-        return $stmt->execute();
+        if (!in_array($status, array('Scheduled', 'Cancelled'), true)) {
+            return false;
+        }
+        $cur = $this->conn->prepare("SELECT status FROM appointments WHERE appointment_id = :id");
+        $cur->execute(array(':id' => $appointment_id));
+        $current = $cur->fetchColumn();
+        if ($current === false || $current === 'Cancelled' || $current === 'Completed') {
+            return false;
+        }
+        $has = $this->conn->prepare("SELECT 1 FROM medical_records WHERE appointment_id = :id");
+        $has->execute(array(':id' => $appointment_id));
+        if ($has->fetchColumn()) {
+            return false;
+        }
+        $stmt = $this->conn->prepare("UPDATE appointments SET status = :status WHERE appointment_id = :id");
+        return $stmt->execute(array(':status' => $status, ':id' => $appointment_id));
     }
 
-        public function cancelOwn($appointment_id, $patient_id) {
+    public function cancelOwn($appointment_id, $patient_id) {
         $query = "UPDATE " . $this->table_name . "
                   SET status = 'Cancelled'
                   WHERE appointment_id = :id
@@ -110,7 +121,22 @@ class Appointment {
         return $row ? $row : null;
     }
 
-        public function search($q, $status, $doctorId, $patientId) {
+
+    public function syncCompleted() {
+        $this->conn->exec(
+            "UPDATE appointments a
+            SET status = 'Completed'
+            WHERE a.status <> 'Cancelled'
+            AND a.status <> 'Completed'
+            AND EXISTS (
+                SELECT 1 FROM medical_records m
+                WHERE m.appointment_id = a.appointment_id
+            )"
+        );
+    }
+
+    public function search($q, $status, $doctorId, $patientId) {
+        $this->syncCompleted();
         $sql = "SELECT a.appointment_id, a.patient_id, a.doctor_id, a.appointment_date, a.status, a.note,
                        p.full_name AS patient_name, p.phone AS patient_phone,
                        d.full_name AS doctor_name, d.specialty
@@ -150,10 +176,23 @@ class Appointment {
     }
 
     public function updateRow($id, $doctorId, $appointmentDate, $note, $status) {
+        $cur = $this->conn->prepare("SELECT status FROM appointments WHERE appointment_id = :id");
+        $cur->execute(array(':id' => $id));
+        $current = $cur->fetchColumn();
+        if ($current === false || $current === 'Cancelled') {
+            return false;
+        }
+        $has = $this->conn->prepare("SELECT 1 FROM medical_records WHERE appointment_id = :id");
+        $has->execute(array(':id' => $id));
+        if ($has->fetchColumn()) {
+            $status = 'Completed';
+        } elseif (!in_array($status, array('Scheduled', 'Cancelled'), true)) {
+            return false;
+        }
         $stmt = $this->conn->prepare(
-            "UPDATE " . $this->table_name . "
-             SET doctor_id = :doctor_id, appointment_date = :appointment_date, note = :note, status = :status
-             WHERE appointment_id = :id"
+            "UPDATE appointments
+            SET doctor_id = :doctor_id, appointment_date = :appointment_date, note = :note, status = :status
+            WHERE appointment_id = :id"
         );
         return $stmt->execute(array(
             ':doctor_id' => $doctorId,
