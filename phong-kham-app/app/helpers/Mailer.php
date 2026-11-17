@@ -20,14 +20,14 @@ class Mailer {
                 'ssl://' . MailConfig::HOST . ':' . (int) MailConfig::PORT,
                 $errno,
                 $errstr,
-                20,
+                4,
                 STREAM_CLIENT_CONNECT,
                 $context
             );
             if (!$socket) {
                 return false;
             }
-            stream_set_timeout($socket, 20);
+            stream_set_timeout($socket, 4);
             self::expect($socket, '220');
             self::cmd($socket, 'EHLO hungdinh.local', '250');
             self::cmd($socket, 'AUTH LOGIN', '334');
