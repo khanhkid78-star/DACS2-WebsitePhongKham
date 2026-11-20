@@ -26,12 +26,11 @@ require_once __DIR__ . '/../partials/navbar.php';
         <input type="number" name="max_price" min="0" step="1" placeholder="500000">
     </label>
     
-    <label>Đơn vị
-        <select name="unit">
-            <option value="">Tất cả</option>
-            <?php foreach ($units as $unit): ?>
-                <option value="<?php echo htmlspecialchars((string) $unit); ?>"><?php echo htmlspecialchars((string) $unit); ?></option>
-            <?php endforeach; ?>
+    <label>Sắp xếp giá
+        <select name="sort">
+            <option value="">Mặc định</option>
+            <option value="price_asc">Giá tăng dần</option>
+            <option value="price_desc">Giá giảm dần</option>
         </select>
     </label>
 </form>

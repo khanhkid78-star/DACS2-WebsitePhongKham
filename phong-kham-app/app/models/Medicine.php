@@ -21,7 +21,7 @@ class Medicine {
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
-    public function search($q, $unit, $min = '', $max = '') {
+    public function search($q, $unit, $min = '', $max = '', $sort = '') {
         $sql = "SELECT * FROM medicines WHERE 1=1";
         $params = array();
         if ($q !== '') {
@@ -50,11 +50,14 @@ class Medicine {
             $sql .= " AND price <= :pmax";
             $params[':pmax'] = (float) $max;
         }
-        if ($unit !== '') {
-            $sql .= " AND unit = :unit";
-            $params[':unit'] = $unit;
+        
+        if ($sort === 'price_asc') {
+            $sql .= " ORDER BY price ASC, medicine_id ASC";
+        } elseif ($sort === 'price_desc') {
+            $sql .= " ORDER BY price DESC, medicine_id ASC";
+        } else {
+            $sql .= " ORDER BY medicine_id ASC";
         }
-        $sql .= " ORDER BY medicine_id ASC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

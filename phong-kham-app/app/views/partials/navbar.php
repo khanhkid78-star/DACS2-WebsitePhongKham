@@ -80,6 +80,7 @@ $role = Auth::getRole();
     <div class="modal-card">
         <button class="modal-x" type="button" data-close>Đóng</button>
         <div class="modal-tabs">
+            <p class="alert" id="auth-error" hidden></p>
             <button class="is-on" type="button" data-tab="login">Đăng nhập</button>
             <button type="button" data-tab="register">Đăng ký</button>
         </div>

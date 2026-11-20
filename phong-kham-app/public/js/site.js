@@ -52,6 +52,13 @@ function showAuthPanel(which) {
     var login = document.getElementById("panel-login");
     var register = document.getElementById("panel-register");
     var showLogin = which !== "register";
+
+    var box = document.getElementById("auth-error");
+    if (box) {
+        box.hidden = true;
+        box.textContent = "";
+    }
+
     if (login) {
         login.classList.toggle("is-hidden", !showLogin);
     }
@@ -523,10 +530,26 @@ if (window.jQuery) {
     bindList("record-filters", "record-body", "/index.php?action=record_rows");
     bindList("medicine-filters", "medicine-body", "/index.php?action=medicine_rows");
 
-    jQuery("#mine-filter").on("input", function () {
-        var q = jQuery(this).val().toLowerCase();
-        jQuery("#mine-appts tr, #mine-records tr, #mine-invoices tr").each(function () {
-            jQuery(this).toggle(jQuery(this).text().toLowerCase().indexOf(q) !== -1);
+    jQuery(document).on("input change", "[data-range] input, [data-range] select", function () {
+        var form = jQuery(this).closest("[data-range]");
+        var body = jQuery(form.attr("data-range"));
+        var q = String(form.find("[data-q]").val() || "").toLowerCase();
+        var qDigits = q.replace(/\D+/g, "");
+        var from = String(form.find("[data-from]").val() || "");
+        var to = String(form.find("[data-to]").val() || "");
+        var minRaw = form.find("[data-min]").val();
+        var maxRaw = form.find("[data-max]").val();
+        body.find("tr").each(function () {
+            var tr = jQuery(this);
+            if (tr.children("td[colspan]").length) return;
+            var day = tr.attr("data-date") || "";
+            var amount = tr.attr("data-amount");
+            var ok = q === "" || tr.text().toLowerCase().indexOf(q) !== -1 || (qDigits !== "" && amount === qDigits);
+            if (from && day && day < from) ok = false;
+            if (to && day && day > to) ok = false;
+            if (minRaw !== undefined && minRaw !== "" && amount !== undefined && Number(amount) < Number(minRaw)) ok = false;
+            if (maxRaw !== undefined && maxRaw !== "" && amount !== undefined && Number(amount) > Number(maxRaw)) ok = false;
+            tr.toggle(ok);
         });
     });
 
@@ -647,3 +670,39 @@ if (window.jQuery) {
         }
     }
 }
+
+document.addEventListener("submit", function (event) {
+    var form = event.target;
+    if (!form || !form.closest || !form.closest("#auth-modal")) {
+        return;
+    }
+    event.preventDefault();
+    var box = document.getElementById("auth-error");
+    var data = new FormData(form);
+    data.set("popup", "1");
+    fetch(form.action, { method: "POST", body: data, credentials: "same-origin" })
+        .then(function (res) { return res.json(); })
+        .then(function (payload) {
+            if (!box) return;
+            if (payload.ok && payload.url) {
+                window.location.href = payload.url;
+                return;
+            }
+            if (payload.ok && payload.panel === "login") {
+                showAuthPanel("login");
+                box.className = "alert alert-ok";
+                box.hidden = false;
+                box.textContent = payload.message || "Tạo tài khoản xong. Hãy đăng nhập.";
+                return;
+            }
+            box.className = "alert";
+            box.hidden = false;
+            box.textContent = (payload && payload.error) ? payload.error : "Không thực hiện được.";
+        })
+        .catch(function () {
+            if (!box) return;
+            box.className = "alert";
+            box.hidden = false;
+            box.textContent = "Không gửi được. Thử lại.";
+        });
+});

@@ -44,6 +44,16 @@ require_once __DIR__ . '/../partials/navbar.php';
     </form>
 <?php endif; ?>
 
+<form class="filters" data-range="#invoice-body">
+    <label>Tìm kiếm
+        <input type="search" data-q placeholder="Bệnh nhân, mã hoặc giá, vd 250000">
+    </label>
+    <label>Từ ngày <input type="date" data-from></label>
+    <label>Đến ngày <input type="date" data-to></label>
+    <label>Giá từ <input type="number" data-min min="0" step="1000"></label>
+    <label>Giá đến <input type="number" data-max min="0" step="1000"></label>
+</form>
+
 <h2>Hóa đơn khám bệnh</h2>
 <div class="table-wrap">
 <table>
@@ -56,33 +66,38 @@ require_once __DIR__ . '/../partials/navbar.php';
         <th>Ngày tạo</th>
         <th>Thao tác</th>
     </tr>
-    <?php if (empty($invoices)): ?>
-        <tr><td colspan="7">Chưa có hóa đơn.</td></tr>
-    <?php endif; ?>
-    <?php foreach ($invoices as $inv): ?>
-    <tr class="invoice-row" data-invoice-id="<?php echo (int) $inv['invoice_id']; ?>" style="cursor:pointer">
-        <td>#<?php echo (int) $inv['invoice_id']; ?></td>
-        <td><?php echo htmlspecialchars((string) $inv['patient_name']); ?></td>
-        <td><?php echo number_format((float) $inv['total_amount']); ?> đ</td>
-        <td><?php echo htmlspecialchars((string) $inv['payment_method']); ?></td>
-        <td>
-            <?php if ($inv['status'] === 'Paid'): ?>
-                <span class="badge badge-ok">Đã thanh toán</span>
-            <?php else: ?>
-                <span class="badge badge-pending">Chưa thanh toán</span>
-            <?php endif; ?>
-        </td>
-        <td><?php echo date('d/m/Y H:i', strtotime($inv['created_at'])); ?></td>
-        <td>
-            <?php if ($inv['status'] !== 'Paid'): ?>
-                <form action="/index.php?action=pay_invoice" method="POST" onsubmit="return confirm('Xác nhận đã thu tiền?');">
-                    <input type="hidden" name="invoice_id" value="<?php echo (int) $inv['invoice_id']; ?>">
-                    <button class="btn-navy" type="submit">Đã thu tiền</button>
-                </form>
-            <?php endif; ?>
-        </td>
-    </tr>
-    <?php endforeach; ?>
+    <tbody id="invoice-body">
+        <?php if (empty($invoices)): ?>
+            <tr><td colspan="7">Chưa có hóa đơn.</td></tr>
+        <?php endif; ?>
+        <?php foreach ($invoices as $inv): ?>
+        <tr class="invoice-row" data-invoice-id="<?php echo (int) $inv['invoice_id']; ?>" 
+        data-date="<?php echo date('Y-m-d', strtotime($inv['created_at'])); ?>" 
+        data-amount="<?php echo (int) round((float) $inv['total_amount']); ?>" 
+        style="cursor:pointer">
+            <td>#<?php echo (int) $inv['invoice_id']; ?></td>
+            <td><?php echo htmlspecialchars((string) $inv['patient_name']); ?></td>
+            <td><?php echo number_format((float) $inv['total_amount']); ?> đ</td>
+            <td><?php echo htmlspecialchars((string) $inv['payment_method']); ?></td>
+            <td>
+                <?php if ($inv['status'] === 'Paid'): ?>
+                    <span class="badge badge-ok">Đã thanh toán</span>
+                <?php else: ?>
+                    <span class="badge badge-pending">Chưa thanh toán</span>
+                <?php endif; ?>
+            </td>
+            <td><?php echo date('d/m/Y H:i', strtotime($inv['created_at'])); ?></td>
+            <td>
+                <?php if ($inv['status'] !== 'Paid'): ?>
+                    <form action="/index.php?action=pay_invoice" method="POST" onsubmit="return confirm('Xác nhận đã thu tiền?');">
+                        <input type="hidden" name="invoice_id" value="<?php echo (int) $inv['invoice_id']; ?>">
+                        <button class="btn-navy" type="submit">Đã thu tiền</button>
+                    </form>
+                <?php endif; ?>
+            </td>
+        </tr>
+        <?php endforeach; ?>
+    </tbody>
 </table>
 </div>
 

@@ -53,25 +53,26 @@ class AuthController {
                     if ($tab !== '') {
                         $target .= (strpos($target, '?') === false ? '?' : '&') . 'tab=' . urlencode($tab);
                     }
+
+                    if (!empty($_POST['popup'])) {
+                        header('Content-Type: application/json; charset=UTF-8');
+                        echo json_encode(array('ok' => true, 'url' => $target), JSON_UNESCAPED_UNICODE);
+                        exit();
+                    }
+
                     header('Location: ' . $target);
                     exit();
                 }
             }
 
-            Auth::flash('Sai tên đăng nhập hoặc mật khẩu.');
-            $back = '/index.php?action=login';
-            if ($next !== '') {
-                $back .= '&next=' . urlencode($next);
+            if (!empty($_POST['popup'])) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(array('ok' => false, 'error' => 'Sai tên đăng nhập hoặc mật khẩu.'), JSON_UNESCAPED_UNICODE);
+                exit();
             }
-            if ($doctor_id > 0) {
-                $back .= '&doctor_id=' . $doctor_id;
-            }
-            $tab = Auth::currentTab();
-            if ($tab !== '') {
-                $back .= '&tab=' . urlencode($tab);
-            }
-            header('Location: ' . $back);
-            exit();
+            $error = 'Sai tên đăng nhập hoặc mật khẩu.';
+            require_once __DIR__ . '/../views/auth/login.php';
+            return;
         }
     }
 
@@ -105,6 +106,11 @@ class AuthController {
 
         $error = $this->validateRegister($data);
         if ($error) {
+            if (!empty($_POST['popup'])) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(array('ok' => false, 'error' => $error), JSON_UNESCAPED_UNICODE);
+                exit();
+            }
             require_once __DIR__ . '/../views/auth/register.php';
             return;
         }
@@ -117,10 +123,24 @@ class AuthController {
             $userModel->registerPatient($data);
         } catch (PDOException $e) {
             $error = 'Không tạo được tài khoản. Tên đăng nhập, SĐT, email hoặc CCCD có thể đã tồn tại.';
+            if (!empty($_POST['popup'])) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(array('ok' => false, 'error' => $error), JSON_UNESCAPED_UNICODE);
+                exit();
+            }
             require_once __DIR__ . '/../views/auth/register.php';
             return;
         }
 
+        if (!empty($_POST['popup'])) {
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(array(
+                'ok' => true,
+                'panel' => 'login',
+                'message' => 'Tạo tài khoản xong. Hãy đăng nhập.',
+            ), JSON_UNESCAPED_UNICODE);
+            exit();
+        }
         $registered = true;
         $next = 'booking';
         $doctor_id = 0;

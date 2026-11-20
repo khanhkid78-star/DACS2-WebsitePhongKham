@@ -11,9 +11,11 @@ require_once __DIR__ . '/../partials/navbar.php';
 </div>
 <p class="lead">Chỉ hủy được lịch đang chờ duyệt.</p>
 
-<label class="mine-search">Tìm của tôi
-    <input type="search" id="mine-filter" placeholder="Bác sĩ, triệu chứng, mã hóa đơn">
-</label>
+<form class="filters" data-range="#mine-appts">
+    <label>Tìm kiếm <input type="search" data-q placeholder="Bác sĩ, lý do, mã"></label>
+    <label>Từ ngày <input type="date" data-from></label>
+    <label>Đến ngày <input type="date" data-to></label>
+</form>
 
 <?php if (empty($my_appointments)): ?>
     <div class="card">
@@ -34,7 +36,7 @@ require_once __DIR__ . '/../partials/navbar.php';
         </tr>
         <tbody id="mine-appts">
         <?php foreach ($my_appointments as $app): ?>
-        <tr>
+        <tr data-date="<?php echo date('Y-m-d', strtotime($app['appointment_date'])); ?>">
             <td>#<?php echo (int) $app['appointment_id']; ?></td>
             <td>BS. <?php echo htmlspecialchars((string) $app['doctor_name']); ?></td>
             <td><?php echo htmlspecialchars((string) $app['specialty']); ?></td>
@@ -70,6 +72,11 @@ require_once __DIR__ . '/../partials/navbar.php';
 
 <section class="section" id="ho-so">
     <h2>Bệnh án của tôi</h2>
+    <form class="filters" data-range="#mine-records">
+        <label>Tìm kiếm <input type="search" data-q placeholder="Bác sĩ, chẩn đoán, thuốc"></label>
+        <label>Từ ngày <input type="date" data-from></label>
+        <label>Đến ngày <input type="date" data-to></label>
+    </form>
     <?php if (empty($my_records)): ?>
         <p class="lead">Chưa có bệnh án.</p>
     <?php else: ?>
@@ -104,6 +111,13 @@ require_once __DIR__ . '/../partials/navbar.php';
 
 <section class="section" id="hoa-don">
     <h2>Hóa đơn của tôi</h2>
+        <form class="filters" data-range="#mine-invoices">
+        <label>Tìm kiếm <input type="search" data-q placeholder="Mã, trạng thái hoặc giá, vd 272000"></label>
+        <label>Từ ngày <input type="date" data-from></label>
+        <label>Đến ngày <input type="date" data-to></label>
+        <label>Giá từ <input type="number" data-min min="0" step="1000"></label>
+        <label>Giá đến <input type="number" data-max min="0" step="1000"></label>
+    </form>
     <?php if (empty($my_invoices)): ?>
         <p class="lead">Chưa có hóa đơn.</p>
     <?php else: ?>
@@ -118,7 +132,11 @@ require_once __DIR__ . '/../partials/navbar.php';
             </tr>
             <tbody id="mine-invoices">
             <?php foreach ($my_invoices as $inv): ?>
-            <tr class="invoice-row" data-invoice-id="<?php echo (int) $inv['invoice_id']; ?>" style="cursor:pointer">
+            <tr class="invoice-row" 
+            data-invoice-id="<?php echo (int) $inv['invoice_id']; ?>" 
+            data-date="<?php echo date('Y-m-d', strtotime($inv['created_at'])); ?>" 
+            data-amount="<?php echo (int) round((float) $inv['total_amount']); ?>" 
+            style="cursor:pointer">
                 <td>#<?php echo (int) $inv['invoice_id']; ?></td>
                 <td><?php echo number_format((float) $inv['total_amount']); ?> đ</td>
                 <td><?php echo htmlspecialchars((string) $inv['payment_method']); ?></td>
