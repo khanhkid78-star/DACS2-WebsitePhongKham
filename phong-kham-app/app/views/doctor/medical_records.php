@@ -20,6 +20,12 @@ require_once __DIR__ . '/../partials/navbar.php';
     <label>Tìm kiếm
         <input type="search" name="q" placeholder="Bệnh nhân, chẩn đoán, mã">
     </label>
+    <label>Từ ngày
+        <input type="date" name="from">
+    </label>
+    <label>Đến ngày
+        <input type="date" name="to">
+    </label>
     <?php if (Auth::getRole() === 'admin'): ?>
         <label>Bác sĩ
             <select name="doctor_id">

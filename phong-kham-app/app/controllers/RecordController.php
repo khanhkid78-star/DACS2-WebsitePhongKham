@@ -244,13 +244,13 @@ class RecordController {
         }
         $records = ($role === 'doctor' && $doctorId < 1)
             ? array()
-            : $bag['records']->getList($filter, null, trim($_GET['q'] ?? ''));
+            : $bag['records']->getList($filter, null, trim($_GET['q'] ?? ''), trim($_GET['from'] ?? ''), trim($_GET['to'] ?? ''));
         require __DIR__ . '/../views/doctor/_record_rows.php';
         exit();
     }
 
     public function detail() {
-        Auth::checkRole(array('doctor', 'admin'));
+        Auth::checkRole(array('doctor', 'admin', 'patient'));
         header('Content-Type: application/json; charset=UTF-8');
 
         $id = (int) ($_GET['id'] ?? 0);
@@ -268,8 +268,16 @@ class RecordController {
                 exit();
             }
         }
+        $patientFilter = null;
+        if ($role === 'patient') {
+            $patientFilter = (int) ($_SESSION['patient_id'] ?? 0);
+            if ($patientFilter < 1) {
+                echo json_encode(array('ok' => false, 'error' => 'Tài khoản chưa gắn hồ sơ bệnh nhân'));
+                exit();
+            }
+        }
 
-        $detail = $this->bag()['records']->getDetail($id, $doctorFilter);
+        $detail = $this->bag()['records']->getDetail($id, $doctorFilter, $patientFilter);
         if (!$detail) {
             echo json_encode(array('ok' => false, 'error' => 'Không tìm thấy hồ sơ'));
             exit();

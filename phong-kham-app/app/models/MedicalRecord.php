@@ -11,7 +11,7 @@ class MedicalRecord {
         return $this->getList(null, null);
     }
 
-    public function getList($doctor_id, $patient_id, $q = '') {
+    public function getList($doctor_id, $patient_id, $q = '', $from = '', $to = '') {
         $sql = "SELECT m.record_id, m.patient_id, m.doctor_id, m.appointment_id,
                        m.visit_date, m.symptoms, m.diagnosis, m.conclusion,
                        COALESCE(m.patient_name, p.full_name) AS patient_name,
@@ -49,6 +49,16 @@ class MedicalRecord {
             $params[':exact'] = $q;
         }
 
+        if ($from !== '') {
+            $sql .= " AND m.visit_date::date >= :from";
+            $params[':from'] = $from;
+        }
+        if ($to !== '') {
+            $sql .= " AND m.visit_date::date <= :to";
+            $params[':to'] = $to;
+        }
+
+
         $sql .= " ORDER BY m.visit_date DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
@@ -68,7 +78,7 @@ class MedicalRecord {
         return $row ? $row : null;
     }
 
-    public function getDetail($record_id, $doctor_id = null) {
+    public function getDetail($record_id, $doctor_id = null, $patient_id = null) {
         $sql = "SELECT m.record_id,
                     COALESCE(m.patient_name, p.full_name) AS patient_name,
                     COALESCE(m.doctor_name, d.full_name) AS doctor_name,
@@ -86,6 +96,11 @@ class MedicalRecord {
         if ($doctor_id !== null) {
             $sql .= " AND m.doctor_id = :doctor_id";
             $params[':doctor_id'] = (int) $doctor_id;
+        }
+
+        if ($patient_id !== null) {
+            $sql .= " AND m.patient_id = :patient_id";
+            $params[':patient_id'] = (int) $patient_id;
         }
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);

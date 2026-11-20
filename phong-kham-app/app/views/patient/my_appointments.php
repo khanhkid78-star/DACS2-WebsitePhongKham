@@ -85,7 +85,9 @@ require_once __DIR__ . '/../partials/navbar.php';
             </tr>
             <tbody id="mine-records">
             <?php foreach ($my_records as $rec): ?>
-            <tr>
+            <tr class="record-row" data-record-id="<?php echo (int) $rec['record_id']; ?>" 
+            data-date="<?php echo date('Y-m-d', strtotime($rec['visit_date'])); ?>" 
+            style="cursor:pointer">
                 <td><?php echo date('H:i d/m/Y', strtotime($rec['visit_date'])); ?></td>
                 <td><?php echo htmlspecialchars((string) $rec['doctor_name']); ?></td>
                 <td><?php echo htmlspecialchars((string) $rec['symptoms']); ?></td>
@@ -141,6 +143,14 @@ require_once __DIR__ . '/../partials/navbar.php';
         <button class="modal-x" type="button" data-close-box>Đóng</button>
         <h2 id="invoice-detail-title">Chi tiết hóa đơn</h2>
         <div id="invoice-detail-body"><p class="lead">Đang tải…</p></div>
+    </div>
+</div>
+
+<div class="modal" id="record-detail-modal">
+    <div class="modal-card">
+        <button class="modal-x" type="button" data-close-box>Đóng</button>
+        <h2 id="detail-title">Chi tiết hồ sơ</h2>
+        <div id="detail-body"><p class="lead">Đang tải…</p></div>
     </div>
 </div>
 

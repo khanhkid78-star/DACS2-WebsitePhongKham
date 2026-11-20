@@ -174,7 +174,9 @@ class BookingController {
             trim($_GET['q'] ?? ''),
             $_GET['status'] ?? '',
             (int) ($_GET['doctor_id'] ?? 0),
-            null
+            null,
+            trim($_GET['from'] ?? ''),
+            trim($_GET['to'] ?? '')
         );
         require __DIR__ . '/../views/receptionist/_appointment_rows.php';
         exit();

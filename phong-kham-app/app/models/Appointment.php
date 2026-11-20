@@ -135,7 +135,7 @@ class Appointment {
         );
     }
 
-    public function search($q, $status, $doctorId, $patientId) {
+    public function search($q, $status, $doctorId, $patientId, $from = '', $to = '') {
         $this->syncCompleted();
         $sql = "SELECT a.appointment_id, a.patient_id, a.doctor_id, a.appointment_date, a.status, a.note,
                        p.full_name AS patient_name, p.phone AS patient_phone,
@@ -169,6 +169,16 @@ class Appointment {
             $params[':q'] = '%' . $q . '%';
             $params[':exact'] = $q;
         }
+
+        if ($from !== '') {
+            $sql .= " AND a.appointment_date::date >= :from";
+            $params[':from'] = $from;
+        }
+        if ($to !== '') {
+            $sql .= " AND a.appointment_date::date <= :to";
+            $params[':to'] = $to;
+        }
+
         $sql .= " ORDER BY a.appointment_date DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);

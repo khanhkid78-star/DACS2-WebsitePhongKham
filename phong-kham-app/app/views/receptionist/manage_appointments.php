@@ -16,6 +16,12 @@ require_once __DIR__ . '/../partials/navbar.php';
     <label>Tìm kiếm
         <input type="search" name="q" placeholder="Tên, số điện thoại, mã">
     </label>
+    <label>Từ ngày
+        <input type="date" name="from">
+    </label>
+    <label>Đến ngày
+        <input type="date" name="to">
+    </label>
     <label>Trạng thái
         <select name="status">
             <option value="">Tất cả</option>

@@ -34,7 +34,8 @@ class AuthController {
 
             if ($user) {
                 // Kiểm tra mật khẩu (hỗ trợ cả mật khẩu đã băm bCrypt và mã chưa băm)
-                $passwordMatch = password_verify($password, $user['password']) || ($password === $user['password']);
+                $hash = (string) ($user['password'] ?? '');
+                $passwordMatch = ($hash !== '' && password_verify($password, $hash)) || $password === $hash;
 
                 if ($passwordMatch) {
                     Auth::startSession();
@@ -57,8 +58,20 @@ class AuthController {
                 }
             }
 
-            $error = "Tài khoản hoặc mật khẩu không chính xác!";
-            require_once __DIR__ . '/../views/auth/login.php';
+            Auth::flash('Sai tên đăng nhập hoặc mật khẩu.');
+            $back = '/index.php?action=login';
+            if ($next !== '') {
+                $back .= '&next=' . urlencode($next);
+            }
+            if ($doctor_id > 0) {
+                $back .= '&doctor_id=' . $doctor_id;
+            }
+            $tab = Auth::currentTab();
+            if ($tab !== '') {
+                $back .= '&tab=' . urlencode($tab);
+            }
+            header('Location: ' . $back);
+            exit();
         }
     }
 
