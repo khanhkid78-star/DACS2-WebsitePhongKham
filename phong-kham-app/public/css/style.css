@@ -860,8 +860,13 @@ body.modal-lock { overflow: hidden; }
 
 .filters label,
 .mine-search {
-    flex: 1 1 200px;
+    flex: 0 1 168px;
     margin-top: 0;
+}
+
+.filters label:has(input[type="search"]) {
+    flex: 1 1 360px;
+    min-width: 280px;
 }
 
 .list-scroll {

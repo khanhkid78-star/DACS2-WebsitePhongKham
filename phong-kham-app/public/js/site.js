@@ -537,9 +537,14 @@ if (window.jQuery) {
         var qDigits = q.replace(/\D+/g, "");
         var from = String(form.find("[data-from]").val() || "");
         var to = String(form.find("[data-to]").val() || "");
-        var minRaw = form.find("[data-min]").val();
-        var maxRaw = form.find("[data-max]").val();
-        body.find("tr").each(function () {
+        var sort = String(form.find("[data-sort]").val() || "");
+        var rows = body.find("tr");
+        rows.each(function (index) {
+            if (!this.hasAttribute("data-pos")) {
+                this.setAttribute("data-pos", String(index));
+            }
+        });
+        rows.each(function () {
             var tr = jQuery(this);
             if (tr.children("td[colspan]").length) return;
             var day = tr.attr("data-date") || "";
@@ -547,9 +552,16 @@ if (window.jQuery) {
             var ok = q === "" || tr.text().toLowerCase().indexOf(q) !== -1 || (qDigits !== "" && amount === qDigits);
             if (from && day && day < from) ok = false;
             if (to && day && day > to) ok = false;
-            if (minRaw !== undefined && minRaw !== "" && amount !== undefined && Number(amount) < Number(minRaw)) ok = false;
-            if (maxRaw !== undefined && maxRaw !== "" && amount !== undefined && Number(amount) > Number(maxRaw)) ok = false;
             tr.toggle(ok);
+        });
+        rows.get().sort(function (a, b) {
+            if (sort === "asc" || sort === "desc") {
+                var diff = Number(a.getAttribute("data-amount") || 0) - Number(b.getAttribute("data-amount") || 0);
+                return sort === "asc" ? diff : -diff;
+            }
+            return Number(a.getAttribute("data-pos") || 0) - Number(b.getAttribute("data-pos") || 0);
+        }).forEach(function (row) {
+            body.append(row);
         });
     });
 

@@ -112,11 +112,16 @@ require_once __DIR__ . '/../partials/navbar.php';
 <section class="section" id="hoa-don">
     <h2>Hóa đơn của tôi</h2>
         <form class="filters" data-range="#mine-invoices">
-        <label>Tìm kiếm <input type="search" data-q placeholder="Mã, trạng thái hoặc giá, vd 272000"></label>
+        <label>Tìm kiếm <input type="search" data-q placeholder="Mã, trạng thái hoặc tổng tiền"></label>
         <label>Từ ngày <input type="date" data-from></label>
         <label>Đến ngày <input type="date" data-to></label>
-        <label>Giá từ <input type="number" data-min min="0" step="1000"></label>
-        <label>Giá đến <input type="number" data-max min="0" step="1000"></label>
+        <label>Tổng tiền
+            <select data-sort>
+                <option value="">Mặc định</option>
+                <option value="desc">Cao đến thấp</option>
+                <option value="asc">Thấp đến cao</option>
+            </select>
+        </label>
     </form>
     <?php if (empty($my_invoices)): ?>
         <p class="lead">Chưa có hóa đơn.</p>
