@@ -42,15 +42,7 @@ class Medicine {
             }
             $sql .= ")";
         }
-        if ($min !== '' && is_numeric($min)) {
-            $sql .= " AND price >= :pmin";
-            $params[':pmin'] = (float) $min;
-        }
-        if ($max !== '' && is_numeric($max)) {
-            $sql .= " AND price <= :pmax";
-            $params[':pmax'] = (float) $max;
-        }
-        
+
         if ($sort === 'price_asc') {
             $sql .= " ORDER BY price ASC, medicine_id ASC";
         } elseif ($sort === 'price_desc') {

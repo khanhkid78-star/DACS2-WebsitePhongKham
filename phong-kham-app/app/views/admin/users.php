@@ -26,7 +26,6 @@ function staffOptions($rows) {
     </div>
     <div class="actions">
         <button class="btn-ghost" type="button" data-open-box="own-account-modal">Hồ sơ của tôi</button>
-        <button class="btn-ghost" type="button" data-open-box="reset-user-modal">Đặt lại mật khẩu</button>
         <button class="btn-navy" type="button" data-open-box="create-user-modal">Tạo tài khoản</button>
     </div>
 </div>
@@ -38,7 +37,6 @@ function staffOptions($rows) {
             <th>Mã</th>
             <th>Tên đăng nhập</th>
             <th>Vai trò</th>
-            <th>Liên kết</th>
             <th>Thao tác</th>
         </tr>
     </thead>
@@ -47,21 +45,6 @@ function staffOptions($rows) {
         <td>#<?php echo (int) $u['user_id']; ?></td>
         <td><?php echo htmlspecialchars((string) $u['username']); ?></td>
         <td><span class="badge badge-ok"><?php echo htmlspecialchars(Auth::roleLabel($u['role'])); ?></span></td>
-        <td>
-            <?php
-                if ($u['doctor_id']) {
-                    echo 'Bác sĩ #' . (int) $u['doctor_id'];
-                } elseif ($u['nurse_id']) {
-                    echo 'Y tá #' . (int) $u['nurse_id'];
-                } elseif ($u['receptionist_id']) {
-                    echo 'Lễ tân #' . (int) $u['receptionist_id'];
-                } elseif ($u['patient_id']) {
-                    echo 'Bệnh nhân #' . (int) $u['patient_id'];
-                } else {
-                    echo 'Quản trị viên hệ thống';
-                }
-            ?>
-        </td>
         <td>
             <?php if ($u['role'] !== 'patient' && (int) $u['user_id'] !== (int) $_SESSION['user_id']): ?>
                 <form action="/index.php?action=delete_user" method="POST" onsubmit="return confirm('Xóa tài khoản này? Hồ sơ nhân sự vẫn còn.');">

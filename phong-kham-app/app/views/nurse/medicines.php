@@ -18,14 +18,6 @@ require_once __DIR__ . '/../partials/navbar.php';
         <input type="search" name="q" placeholder="Tên, mã, mô tả hoặc giá (vd: 150000)">
     </label>
     
-    <label>Giá từ
-        <input type="number" name="min_price" min="0" step="1" placeholder="0">
-    </label>
-
-    <label>Giá đến
-        <input type="number" name="max_price" min="0" step="1" placeholder="500000">
-    </label>
-    
     <label>Sắp xếp giá
         <select name="sort">
             <option value="">Mặc định</option>

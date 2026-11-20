@@ -46,7 +46,7 @@ require_once __DIR__ . '/../partials/navbar.php';
 
 <form class="filters" data-range="#invoice-body">
     <label>Tìm kiếm
-        <input type="search" data-q placeholder="Bệnh nhân, mã hoặc giá, vd 250000">
+        <input type="search" data-q placeholder="Bệnh nhân, mã hoặc tổng tiền">
     </label>
     <label>Từ ngày <input type="date" data-from></label>
     <label>Đến ngày <input type="date" data-to></label>
