@@ -26,6 +26,7 @@ require_once __DIR__ . '/../app/controllers/RecordController.php';
 require_once __DIR__ . '/../app/controllers/InvoiceController.php';
 require_once __DIR__ . '/../app/controllers/MedicineController.php';
 require_once __DIR__ . '/../app/controllers/AdminController.php';
+require_once __DIR__ . '/../app/controllers/PersonController.php';
 
 Auth::startSession();
 
@@ -171,6 +172,27 @@ switch ($action) {
     case 'admin_stats_data':
         (new AdminController())->statsData();
         break;
+
+    case 'staff':
+        (new PersonController())->show();
+        break;
+    case 'staff_rows':
+        (new PersonController())->rows();
+        break;
+    case 'staff_detail':
+        (new PersonController())->detail();
+        break;
+    case 'staff_photo':
+        (new PersonController())->photo();
+        break;
+    case 'staff_save':
+        (new PersonController())->save();
+        break;
+    case 'staff_delete':
+        (new PersonController())->remove();
+        break;
+
+
     case 'notifications':
         (new AuthController())->notifications();
         break;

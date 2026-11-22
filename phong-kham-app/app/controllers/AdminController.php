@@ -100,27 +100,6 @@ class AdminController {
     public function statsData() {
         Auth::checkRole(array('admin'));
         $grain = (isset($_GET['grain']) && $_GET['grain'] === 'quarter') ? 'quarter' : 'month';
-        $db = $this->model()['db'];
-        $revenue = $this->trend($db, $grain, "SELECT created_at, total_amount FROM invoices WHERE status = 'Paid'", 'created_at', 'SUM(src.total_amount)');
-        $patients = $this->trend($db, $grain, "SELECT created_at FROM patients", 'created_at', 'COUNT(src.created_at)');
-        $records = $this->trend($db, $grain, "SELECT visit_date AS created_at FROM medical_records", 'created_at', 'COUNT(src.created_at)');
-        $visits = $this->trend($db, $grain, "SELECT appointment_date AS created_at FROM appointments WHERE status <> 'Cancelled'", 'created_at', 'COUNT(src.created_at)');
-        $labels = array();
-        foreach ($revenue as $row) {
-            $labels[] = $row['label'];
-        }
-        header('Content-Type: application/json; charset=UTF-8');
-        echo json_encode(array(
-            'labels' => $labels,
-            'revenue' => array_map('floatval', array_column($revenue, 'value')),
-            'patients' => array_map('intval', array_column($patients, 'value')),
-            'records' => array_map('intval', array_column($records, 'value')),
-            'visits' => array_map('intval', array_column($visits, 'value')),
-        ));
-        exit();
-    }
-
-    private function trend($db, $grain, $sourceSql, $dateColumn, $aggregate) {
         $trunc = $grain === 'quarter' ? 'quarter' : 'month';
         $step = $grain === 'quarter' ? '3 months' : '1 month';
         $back = $grain === 'quarter' ? '21 months' : '11 months';
@@ -133,12 +112,53 @@ class AdminController {
                         date_trunc('$trunc', CURRENT_DATE),
                         interval '$step'
                     ) AS bucket
+                ),
+                rev AS (
+                    SELECT date_trunc('$trunc', created_at) AS bucket, SUM(total_amount) AS value
+                    FROM invoices
+                    WHERE status = 'Paid'
+                      AND created_at >= date_trunc('$trunc', CURRENT_DATE) - interval '$back'
+                    GROUP BY 1
+                ),
+                pat AS (
+                    SELECT date_trunc('$trunc', created_at) AS bucket, COUNT(*) AS value
+                    FROM patients
+                    WHERE created_at >= date_trunc('$trunc', CURRENT_DATE) - interval '$back'
+                    GROUP BY 1
+                ),
+                rec AS (
+                    SELECT date_trunc('$trunc', visit_date) AS bucket, COUNT(*) AS value
+                    FROM medical_records
+                    WHERE visit_date >= date_trunc('$trunc', CURRENT_DATE) - interval '$back'
+                    GROUP BY 1
+                ),
+                vis AS (
+                    SELECT date_trunc('$trunc', appointment_date) AS bucket, COUNT(*) AS value
+                    FROM appointments
+                    WHERE status <> 'Cancelled'
+                      AND appointment_date >= date_trunc('$trunc', CURRENT_DATE) - interval '$back'
+                    GROUP BY 1
                 )
-                SELECT $label AS label, COALESCE($aggregate, 0) AS value
+                SELECT $label AS label,
+                       COALESCE(rev.value, 0) AS revenue,
+                       COALESCE(pat.value, 0) AS patients,
+                       COALESCE(rec.value, 0) AS records,
+                       COALESCE(vis.value, 0) AS visits
                 FROM buckets b
-                LEFT JOIN ($sourceSql) src ON date_trunc('$trunc', src.$dateColumn) = b.bucket
-                GROUP BY b.bucket
+                LEFT JOIN rev ON rev.bucket = b.bucket
+                LEFT JOIN pat ON pat.bucket = b.bucket
+                LEFT JOIN rec ON rec.bucket = b.bucket
+                LEFT JOIN vis ON vis.bucket = b.bucket
                 ORDER BY b.bucket";
-        return $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $this->model()['db']->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(array(
+            'labels' => array_column($rows, 'label'),
+            'revenue' => array_map('floatval', array_column($rows, 'revenue')),
+            'patients' => array_map('intval', array_column($rows, 'patients')),
+            'records' => array_map('intval', array_column($rows, 'records')),
+            'visits' => array_map('intval', array_column($rows, 'visits')),
+        ));
+        exit();
     }
 }

@@ -529,6 +529,7 @@ if (window.jQuery) {
     bindList("appt-filters", "appt-body", "/index.php?action=appointment_rows");
     bindList("record-filters", "record-body", "/index.php?action=record_rows");
     bindList("medicine-filters", "medicine-body", "/index.php?action=medicine_rows");
+    bindList("staff-filters", "staff-body", "/index.php?action=staff_rows");
 
     jQuery(document).on("input change", "[data-range] input, [data-range] select", function () {
         var form = jQuery(this).closest("[data-range]");

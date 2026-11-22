@@ -30,6 +30,7 @@ require_once __DIR__ . '/../partials/navbar.php';
     <div class="card"><h3>Lượt khám</h3><canvas id="chart-visits"></canvas></div>
 </div>
 
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 var statCharts = {};

@@ -31,6 +31,7 @@ $role = Auth::getRole();
             <!-- Menu dành cho Lễ tân -->
             <a href="/index.php?action=receptionist_appointments">Quản Lý Lịch Hẹn</a>
             <a href="/index.php?action=invoices">Quản Lý Hóa Đơn</a>
+            <a href="/index.php?action=staff&kind=patient">Bệnh nhân</a>
         
         <?php elseif ($role === 'doctor'): ?>
             <!-- Menu dành cho Bác sĩ -->
@@ -43,6 +44,7 @@ $role = Auth::getRole();
         <?php elseif ($role === 'admin'): ?>
             <!-- Menu dành cho Admin -->
             <a href="/index.php?action=admin_stats">Thống kê</a>
+            <a href="/index.php?action=staff">Nhân sự</a>
             <a href="/index.php?action=doctor_records">Bệnh Án</a>
             <a href="/index.php?action=invoices">Hóa Đơn</a>
             <a href="/index.php?action=receptionist_appointments">Lịch hẹn</a>

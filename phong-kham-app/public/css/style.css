@@ -1020,3 +1020,45 @@ button:disabled {
         grid-template-columns: 1fr;
     }
 }
+
+.staff-tabs { 
+    display: flex; 
+    gap: 8px; 
+    flex-wrap: wrap; 
+    margin: 0 0 14px; 
+}
+
+.staff-tabs a { 
+    text-decoration: none; 
+}
+
+.avatar { 
+    width: 36px; 
+    height: 36px; 
+    border-radius: 50%; 
+    object-fit: cover; 
+    background: #efe6da; 
+    display: inline-block; 
+}
+
+.avatar-lg { 
+    width: 96px; 
+    height: 96px; 
+    margin-bottom: 12px; }
+
+.avatar-empty { 
+    line-height: 36px; 
+    text-align: center; 
+    color: #5c6773; 
+    font-weight: 700; 
+}
+
+tr.person-row { 
+    cursor: pointer; 
+}
+
+#person-modal form .btn-logout,
+#staff-body form { 
+    display: inline; 
+    margin-left: 6px; 
+}
