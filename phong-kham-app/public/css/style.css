@@ -1071,32 +1071,67 @@ tr.person-row {
 .navbar { z-index: 40; }
 
 .side-toggle {
-    border: 1px solid #e4dcd0;
-    background: #fffdf8;
-    color: #0a3a6b;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 10px;
+    padding: 0;
+    border: 0;
     border-radius: 8px;
-    padding: 8px 12px;
-    font-weight: 700;
+    background: transparent;
+    color: #0a3a6b;
     cursor: pointer;
 }
+
+body.side-open .side-toggle { margin-left: 0; }
+.side-toggle:hover { background: #f8e7d6; }
+
+.side-toggle span,
+.side-toggle span::before,
+.side-toggle span::after {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+}
+
+.side-toggle span { position: relative; }
+
+.side-toggle span::before,
+.side-toggle span::after {
+    content: "";
+    position: absolute;
+    left: 0;
+}
+
+.side-toggle span::before { top: -6px; }
+.side-toggle span::after { top: 6px; }
 
 .side-nav {
     position: fixed;
     left: 0;
     z-index: 30;
-    width: 240px;
-    overflow: auto;
+    width: 56px;
+    overflow: hidden;
     box-sizing: border-box;
-    padding: 12px;
+    padding: 12px 8px;
     background: #fffdf8;
     border-right: 1px solid #e4dcd0;
-    transform: translateX(-105%);
-    transition: transform .2s ease;
+    transform: none;
+    transition: width .2s ease;
 }
 
-body.side-open .side-nav { transform: none; }
+body.side-open .side-nav {
+    width: 240px;
+    overflow: auto;
+    padding: 12px;
+}
 
-.side-nav a {
+.side-nav a { display: none; }
+
+body.side-open .side-nav a {
     display: block;
     margin-bottom: 4px;
     padding: 10px 12px;
@@ -1109,11 +1144,7 @@ body.side-open .side-nav { transform: none; }
 .side-nav a:hover { background: #f8e7d6; color: #1c2430; }
 
 .side-nav a.nav-login,
-.side-nav a.nav-register {
-    color: #fffdf8;
-    text-align: center;
-}
-
+.side-nav a.nav-register { color: #fffdf8; text-align: center; }
 .side-nav a.nav-login { background: #0a3a6b; }
 .side-nav a.nav-login:hover { background: #06243f; color: #fffdf8; }
 .side-nav a.nav-register { background: #c24e12; }
@@ -1125,7 +1156,14 @@ body.side-open .container {
     margin-right: 20px;
 }
 
+body:not(.side-open) .container {
+    width: min(1140px, calc(100% - 96px));
+    margin-left: 76px;
+    margin-right: 20px;
+}
+
 body.side-open .site-footer { margin-left: 240px; }
+body:not(.side-open) .site-footer { margin-left: 56px; }
 
 @media (max-width: 800px) {
     .nav-links {
@@ -1139,7 +1177,7 @@ body.side-open .site-footer { margin-left: 240px; }
     body.side-open .site-footer {
         width: auto;
         max-width: 1140px;
-        margin-left: auto;
-        margin-right: auto;
+        margin-left: 20px;
+        margin-right: 20px;
     }
 }

@@ -15,7 +15,6 @@ $role = Auth::getRole();
         </span>
     </a>
 
-    <button class="side-toggle" id="side-toggle" type="button">Mục</button>
 
     <?php if (Auth::isLoggedIn()): ?>
         <div class="nav-links">
@@ -33,6 +32,11 @@ $role = Auth::getRole();
 </div>
 
 <aside class="side-nav" id="side-nav">
+
+    <button class="side-toggle" id="side-toggle" type="button" aria-label="Đóng mở mục lục">
+        <span></span>
+    </button>
+
     <a href="/index.php">Trang Chủ</a>
     <?php if ($role === 'patient'): ?>
         <a href="/index.php?action=booking">Đặt lịch khám</a>
@@ -77,10 +81,9 @@ $role = Auth::getRole();
         side.style.top = bottom + "px";
         side.style.height = "calc(100vh - " + bottom + "px)";
     }
-    function paint() {
-        if (!btn) return;
-        btn.textContent = document.body.classList.contains("side-open") ? "Đóng" : "Mục";
-    }
+
+    function paint() {}
+    
     try {
         if (localStorage.getItem(key) !== "0") document.body.classList.add("side-open");
     } catch (e) {}

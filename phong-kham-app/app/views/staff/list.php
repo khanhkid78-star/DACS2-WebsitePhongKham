@@ -75,7 +75,7 @@ $labels = array(
 <form class="filters" id="staff-filters">
     <input type="hidden" name="kind" value="<?php echo htmlspecialchars($kind); ?>">
     <label>Tìm kiếm
-        <input type="search" name="q" placeholder="Tên, điện thoại, email, mã<?php echo $kind === 'patient' ? ', CCCD, BHYT' : ''; ?>">
+        <input type="search" name="q" placeholder="Tên, điện thoại, email, ngày sinh, mã<?php echo $kind === 'patient' ? ', CCCD, BHYT' : ''; ?>">
     </label>
     <label>Giới tính
         <select name="gender">
@@ -113,8 +113,7 @@ $labels = array(
             </select>
         </label>
     <?php endif; ?>
-    <label>Sinh từ <input type="date" name="from"></label>
-    <label>Sinh đến <input type="date" name="to"></label>
+
 </form>
 
 <div class="table-wrap list-scroll">
@@ -216,7 +215,7 @@ function loadPerson(kind, id, mode) {
             document.getElementById("detail-body").innerHTML = html;
             openBox("person-detail");
         })
-        
+
         .fail(function () {
             document.getElementById("detail-title").textContent = "Chi tiết";
             document.getElementById("detail-body").innerHTML = "<p class=\"lead\">Không tải được chi tiết hồ sơ.</p>";

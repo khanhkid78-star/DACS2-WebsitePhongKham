@@ -71,6 +71,15 @@ class Person {
             }
             $parts[] = 'CAST(' . $pk . ' AS TEXT) = :exact';
             $params[':exact'] = $q;
+
+            foreach ($this->dateNeedles($q) as $i => $needle) {
+                $parts[] = "COALESCE(to_char(date_of_birth, 'DD/MM/YYYY'), '') ILIKE :dob" . $i;
+                $parts[] = "COALESCE(to_char(date_of_birth, 'YYYY-MM-DD'), '') ILIKE :dobi" . $i;
+                $params[':dob' . $i] = '%' . $needle . '%';
+                $params[':dobi' . $i] = '%' . $needle . '%';
+            }
+
+
             $sql .= ' AND (' . implode(' OR ', $parts) . ')';
         }
         if (!empty($filters['gender'])) {
@@ -89,18 +98,32 @@ class Person {
             $sql .= ' AND status = :status';
             $params[':status'] = $filters['status'];
         }
-        if (!empty($filters['from'])) {
-            $sql .= ' AND date_of_birth >= :dfrom';
-            $params[':dfrom'] = $filters['from'];
-        }
-        if (!empty($filters['to'])) {
-            $sql .= ' AND date_of_birth <= :dto';
-            $params[':dto'] = $filters['to'];
-        }
+
         $sql .= ' ORDER BY ' . $pk . ' DESC';
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function dateNeedles($q) {
+        $q = trim(str_replace(array('.', '-', ' '), '/', $q));
+        $out = array($q);
+        if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $q, $m)) {
+            $d = str_pad($m[1], 2, '0', STR_PAD_LEFT);
+            $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+            $out[] = $d . '/' . $mo . '/' . $m[3];
+            $out[] = $m[3] . '-' . $mo . '-' . $d;
+        } elseif (preg_match('/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/', $q, $m)) {
+            $d = str_pad($m[3], 2, '0', STR_PAD_LEFT);
+            $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+            $out[] = $d . '/' . $mo . '/' . $m[1];
+            $out[] = $m[1] . '-' . $mo . '-' . $d;
+        } elseif (preg_match('/^(\d{1,2})\/(\d{4})$/', $q, $m)) {
+            $out[] = str_pad($m[1], 2, '0', STR_PAD_LEFT) . '/' . $m[2];
+        } elseif (preg_match('/^(\d{1,2})\/(\d{1,2})$/', $q, $m)) {
+            $out[] = str_pad($m[1], 2, '0', STR_PAD_LEFT) . '/' . str_pad($m[2], 2, '0', STR_PAD_LEFT);
+        }
+        return array_values(array_unique($out));
     }
 
     public function find($kind, $id) {
