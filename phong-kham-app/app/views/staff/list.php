@@ -215,8 +215,15 @@ function loadPerson(kind, id, mode) {
             });
             document.getElementById("detail-body").innerHTML = html;
             openBox("person-detail");
+        })
+        
+        .fail(function () {
+            document.getElementById("detail-title").textContent = "Chi tiết";
+            document.getElementById("detail-body").innerHTML = "<p class=\"lead\">Không tải được chi tiết hồ sơ.</p>";
+            openBox("person-detail");
         });
 }
+
 document.getElementById("open-person").addEventListener("click", function () {
     document.querySelector("#person-modal form").reset();
     document.getElementById("person-id").value = "0";
@@ -224,12 +231,16 @@ document.getElementById("open-person").addEventListener("click", function () {
     document.getElementById("person-preview").hidden = true;
     openBox("person-modal");
 });
-jQuery(document).on("click", "tr.person-row", function (e) {
-    if (jQuery(e.target).closest("[data-edit], button, a, form").length && !jQuery(e.target).closest("[data-edit]").length) {
-        return;
-    }
-    var mode = jQuery(e.target).closest("[data-edit]").length ? "edit" : "detail";
-    loadPerson(jQuery(this).attr("data-kind"), jQuery(this).attr("data-id"), mode);
+
+window.addEventListener("load", function () {
+    jQuery(document).on("click", "tr.person-row", function (e) {
+        if (jQuery(e.target).closest("button, a, form").length && !jQuery(e.target).closest("[data-edit]").length) {
+            return;
+        }
+        var mode = jQuery(e.target).closest("[data-edit]").length ? "edit" : "detail";
+        loadPerson(jQuery(this).attr("data-kind"), jQuery(this).attr("data-id"), mode);
+    });
 });
+
 </script>
 <?php require __DIR__ . '/../partials/footer.php'; ?>
