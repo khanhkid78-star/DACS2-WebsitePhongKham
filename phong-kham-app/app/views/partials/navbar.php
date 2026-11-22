@@ -15,43 +15,10 @@ $role = Auth::getRole();
         </span>
     </a>
 
-    <button class="nav-toggle" type="button">Menu</button>
+    <button class="side-toggle" id="side-toggle" type="button">Mục</button>
 
-    <div class="nav-links">
-        <a href="/index.php">Trang Chủ</a>
-
-        <?php if ($role === 'patient'): ?>
-            <!-- Menu dành cho Bệnh nhân -->
-            <a href="/index.php?action=booking">Đặt lịch khám</a>
-            <a href="/index.php?action=my_appointments">Lịch Hẹn Của Tôi</a>
-            <a href="/index.php?action=my_appointments#ho-so">Bệnh án</a>
-            <a href="/index.php?action=my_appointments#hoa-don">Hóa đơn</a>
-        
-        <?php elseif ($role === 'receptionist'): ?>
-            <!-- Menu dành cho Lễ tân -->
-            <a href="/index.php?action=receptionist_appointments">Quản Lý Lịch Hẹn</a>
-            <a href="/index.php?action=invoices">Quản Lý Hóa Đơn</a>
-            <a href="/index.php?action=staff&kind=patient">Bệnh nhân</a>
-        
-        <?php elseif ($role === 'doctor'): ?>
-            <!-- Menu dành cho Bác sĩ -->
-            <a href="/index.php?action=doctor_records">Hồ Sơ Bệnh Án</a>
-        
-        <?php elseif ($role === 'nurse'): ?>
-            <!-- Menu dành cho Y tá -->
-            <a href="/index.php?action=nurse_medicines">Quản Lý Kho Thuốc</a>
-        
-        <?php elseif ($role === 'admin'): ?>
-            <!-- Menu dành cho Admin -->
-            <a href="/index.php?action=admin_stats">Thống kê</a>
-            <a href="/index.php?action=staff">Nhân sự</a>
-            <a href="/index.php?action=doctor_records">Bệnh Án</a>
-            <a href="/index.php?action=invoices">Hóa Đơn</a>
-            <a href="/index.php?action=receptionist_appointments">Lịch hẹn</a>
-            <a href="/index.php?action=nurse_medicines">Kho thuốc</a>
-        <?php endif; ?>
-
-        <?php if (Auth::isLoggedIn()): ?>
+    <?php if (Auth::isLoggedIn()): ?>
+        <div class="nav-links">
             <span class="bell-wrap">
                 <button class="nav-bell" id="nav-bell" type="button" aria-label="Thông báo">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
@@ -59,22 +26,79 @@ $role = Auth::getRole();
                 </button>
                 <div class="bell-panel" id="bell-panel"></div>
             </span>
-
-            <?php if ($role === 'admin'): ?>
-                <a href="/index.php?action=admin_users">Tài khoản</a>
-            <?php else: ?>
-                <a href="/index.php?action=account">Tài khoản</a>
-            <?php endif; ?>
             <span class="nav-user"><?php echo htmlspecialchars((string) ($_SESSION['username'] ?? '')); ?></span>
-            <a href="/index.php?action=logout<?php echo Auth::currentTab() !== '' ? '&tab=' . urlencode(Auth::currentTab()) : ''; ?>" class="nav-logout">
-                Đăng xuất
-            </a>
-        <?php else: ?>
-            <a class="nav-login" href="/index.php?action=login&next=booking" data-open="login">Đăng nhập</a>
-            <a class="nav-register" href="/index.php?action=register" data-open="register">Đăng ký</a>
-            <a href="/index.php?action=booking">Đặt lịch khám</a>
-        <?php endif; ?>
-    </div>
+            <a href="/index.php?action=logout<?php echo Auth::currentTab() !== '' ? '&tab=' . urlencode(Auth::currentTab()) : ''; ?>" class="nav-logout">Đăng xuất</a>
+        </div>
+    <?php endif; ?>
+</div>
+
+<aside class="side-nav" id="side-nav">
+    <a href="/index.php">Trang Chủ</a>
+    <?php if ($role === 'patient'): ?>
+        <a href="/index.php?action=booking">Đặt lịch khám</a>
+        <a href="/index.php?action=my_appointments">Lịch Hẹn Của Tôi</a>
+        <a href="/index.php?action=my_appointments#ho-so">Bệnh án</a>
+        <a href="/index.php?action=my_appointments#hoa-don">Hóa đơn</a>
+        <a href="/index.php?action=account">Tài khoản</a>
+    <?php elseif ($role === 'receptionist'): ?>
+        <a href="/index.php?action=receptionist_appointments">Quản Lý Lịch Hẹn</a>
+        <a href="/index.php?action=invoices">Quản Lý Hóa Đơn</a>
+        <a href="/index.php?action=staff&kind=patient">Bệnh nhân</a>
+        <a href="/index.php?action=account">Tài khoản</a>
+    <?php elseif ($role === 'doctor'): ?>
+        <a href="/index.php?action=doctor_records">Hồ Sơ Bệnh Án</a>
+        <a href="/index.php?action=account">Tài khoản</a>
+    <?php elseif ($role === 'nurse'): ?>
+        <a href="/index.php?action=nurse_medicines">Quản Lý Kho Thuốc</a>
+        <a href="/index.php?action=account">Tài khoản</a>
+    <?php elseif ($role === 'admin'): ?>
+        <a href="/index.php?action=admin_stats">Thống kê</a>
+        <a href="/index.php?action=staff">Nhân sự</a>
+        <a href="/index.php?action=doctor_records">Bệnh Án</a>
+        <a href="/index.php?action=invoices">Hóa Đơn</a>
+        <a href="/index.php?action=receptionist_appointments">Lịch hẹn</a>
+        <a href="/index.php?action=nurse_medicines">Kho thuốc</a>
+        <a href="/index.php?action=admin_users">Tài khoản</a>
+    <?php else: ?>
+        <a class="nav-login" href="/index.php?action=login&next=booking" data-open="login">Đăng nhập</a>
+        <a class="nav-register" href="/index.php?action=register" data-open="register">Đăng ký</a>
+        <a href="/index.php?action=booking">Đặt lịch khám</a>
+    <?php endif; ?>
+</aside>
+<script>
+(function () {
+    var key = "pk_side";
+    var btn = document.getElementById("side-toggle");
+    var side = document.getElementById("side-nav");
+    function place() {
+        var bar = document.querySelector(".navbar");
+        if (!bar || !side) return;
+        var bottom = Math.max(0, bar.getBoundingClientRect().bottom);
+        side.style.top = bottom + "px";
+        side.style.height = "calc(100vh - " + bottom + "px)";
+    }
+    function paint() {
+        if (!btn) return;
+        btn.textContent = document.body.classList.contains("side-open") ? "Đóng" : "Mục";
+    }
+    try {
+        if (localStorage.getItem(key) !== "0") document.body.classList.add("side-open");
+    } catch (e) {}
+    paint();
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place);
+    if (btn) {
+        btn.addEventListener("click", function () {
+            document.body.classList.toggle("side-open");
+            try {
+                localStorage.setItem(key, document.body.classList.contains("side-open") ? "1" : "0");
+            } catch (e) {}
+            paint();
+        });
+    }
+})();
+</script>
 </div>
 
 <?php if (!Auth::isLoggedIn()): ?>
