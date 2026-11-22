@@ -204,17 +204,6 @@ class User {
             return 'Mật khẩu mới tối thiểu 5 ký tự.';
         }
 
-        $kind = $bundle['kind'];
-        $profile = $bundle['profile'];
-        $fields = array();
-        if ($profile) {
-            $error = $this->checkProfile($kind, $input);
-            if ($error !== '') {
-                return $error;
-            }
-            $fields = $this->profileFields($kind, $input);
-        }
-
         $taken = $this->conn->prepare(
             "SELECT user_id FROM users WHERE username = :username AND user_id <> :id"
         );
@@ -242,31 +231,6 @@ class User {
                     ':username' => $username,
                     ':id' => $user_id,
                 ));
-            }
-
-            if ($profile && $fields) {
-                $sets = array();
-                $params = array();
-                foreach ($fields as $column => $value) {
-                    $sets[] = $column . " = :" . $column;
-                    $params[':' . $column] = $value;
-                }
-                $idColumn = array(
-                    'patient' => 'patient_id',
-                    'doctor' => 'doctor_id',
-                    'nurse' => 'nurse_id',
-                    'receptionist' => 'receptionist_id',
-                );
-                $table = array(
-                    'patient' => 'patients',
-                    'doctor' => 'doctors',
-                    'nurse' => 'nurses',
-                    'receptionist' => 'receptionists',
-                );
-                $params[':id'] = (int) $profile[$idColumn[$kind]];
-                $sql = "UPDATE " . $table[$kind] . " SET " . implode(', ', $sets)
-                    . " WHERE " . $idColumn[$kind] . " = :id";
-                $this->conn->prepare($sql)->execute($params);
             }
 
             $this->conn->commit();
@@ -354,22 +318,70 @@ class User {
         );
     }
 
+    public function updateProfile($user_id, $input, $photoValue, $clearPhoto) {
+        $bundle = $this->accountBundle($user_id);
+        if (!$bundle || empty($bundle['profile']) || $bundle['kind'] === 'admin') {
+            return 'Không có hồ sơ để cập nhật.';
+        }
+        $kind = $bundle['kind'];
+        $error = $this->checkProfile($kind, $input);
+        if ($error !== '') {
+            return $error;
+        }
+        $fields = $this->profileFields($kind, $input);
+        if ($kind === 'patient' && $photoValue !== null) {
+            $fields['photo'] = $photoValue;
+        } elseif ($kind === 'patient' && $clearPhoto) {
+            $fields['photo'] = null;
+        }
+        $idColumn = array(
+            'patient' => 'patient_id',
+            'doctor' => 'doctor_id',
+            'nurse' => 'nurse_id',
+            'receptionist' => 'receptionist_id',
+        );
+        $table = array(
+            'patient' => 'patients',
+            'doctor' => 'doctors',
+            'nurse' => 'nurses',
+            'receptionist' => 'receptionists',
+        );
+        $sets = array();
+        $params = array(':id' => (int) $bundle['profile'][$idColumn[$kind]]);
+        foreach ($fields as $column => $value) {
+            $sets[] = $column . ' = :' . $column;
+            $params[':' . $column] = $value;
+        }
+        $sql = 'UPDATE ' . $table[$kind] . ' SET ' . implode(', ', $sets)
+            . ' WHERE ' . $idColumn[$kind] . ' = :id';
+        $this->conn->prepare($sql)->execute($params);
+        return '';
+    }
+
     public function deleteSelf($user_id) {
         $user = $this->findById($user_id);
         if (!$user) {
             return 'Không thấy tài khoản.';
         }
         if ($user['role'] === 'admin') {
-            $count = (int) $this->conn->query(
-                "SELECT COUNT(*) FROM users WHERE role = 'admin'"
-            )->fetchColumn();
+            $count = (int) $this->conn->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn();
             if ($count <= 1) {
                 return 'Không xóa quản trị cuối cùng.';
             }
         }
-        $stmt = $this->conn->prepare("DELETE FROM users WHERE user_id = :id");
-        $stmt->execute(array(':id' => $user_id));
-        return $stmt->rowCount() > 0 ? '' : 'Không xóa được tài khoản.';
+        $this->conn->beginTransaction();
+        try {
+            $this->conn->prepare('DELETE FROM notifications WHERE user_id = :id')->execute(array(':id' => $user_id));
+            $stmt = $this->conn->prepare('DELETE FROM users WHERE user_id = :id');
+            $stmt->execute(array(':id' => $user_id));
+            $this->conn->commit();
+            return $stmt->rowCount() > 0 ? '' : 'Không xóa được tài khoản.';
+        } catch (PDOException $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            return 'Không xóa được tài khoản.';
+        }
     }
 }
 ?>

@@ -146,6 +146,12 @@ switch ($action) {
     case 'save_account':
         (new AuthController())->saveAccount();
         break;
+    case 'save_profile':
+        (new AuthController())->saveProfile();
+        break;
+    case 'account_photo':
+        (new AuthController())->accountPhoto();
+        break;
     case 'delete_account':
         (new AuthController())->deleteOwnAccount();
         break;

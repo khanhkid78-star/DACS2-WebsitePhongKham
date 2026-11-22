@@ -1032,19 +1032,24 @@ button:disabled {
     text-decoration: none; 
 }
 
-.avatar { 
-    width: 36px; 
-    height: 36px; 
-    border-radius: 50%; 
-    object-fit: cover; 
-    background: #efe6da; 
-    display: inline-block; 
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 0;
+    border: 1px solid #e4dcd0;
+    object-fit: cover;
+    background: #efe6da;
+    display: inline-block;
+    vertical-align: middle;
 }
 
-.avatar-lg { 
-    width: 96px; 
-    height: 96px; 
-    margin-bottom: 12px; }
+.avatar-lg {
+    width: 96px;
+    height: 96px;
+    margin-bottom: 12px;
+    border-radius: 0;
+}
+.avatar-lg.avatar-empty { line-height: 96px; }
 
 .avatar-empty { 
     line-height: 36px; 

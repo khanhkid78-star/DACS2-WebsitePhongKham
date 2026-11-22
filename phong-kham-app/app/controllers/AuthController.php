@@ -247,6 +247,80 @@ class AuthController {
         exit();
     }
 
+    public function saveProfile() {
+        $this->requireUser();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /index.php?action=account');
+            exit();
+        }
+        $photoValue = null;
+        if (!empty($_FILES['photo']['tmp_name']) && Auth::getRole() === 'patient') {
+            $photoValue = $this->packPhoto($_FILES['photo']);
+            if ($photoValue === '') {
+                Auth::flash('Ảnh phải là JPG, PNG hoặc WEBP và nhỏ hơn 2MB.');
+                header('Location: /index.php?action=account');
+                exit();
+            }
+        }
+        $message = (new User((new Database())->getConnection()))->updateProfile(
+            (int) $_SESSION['user_id'],
+            $_POST,
+            $photoValue,
+            !empty($_POST['clear_photo'])
+        );
+        Auth::flash($message === '' ? 'Đã lưu hồ sơ.' : $message, $message === '');
+        header('Location: /index.php?action=account');
+        exit();
+    }
+
+    public function accountPhoto() {
+        $this->requireUser();
+        $bundle = (new User((new Database())->getConnection()))->accountBundle((int) $_SESSION['user_id']);
+        $raw = (string) ($bundle['profile']['photo'] ?? '');
+        $cut = strpos($raw, '|');
+        if (!$bundle || $bundle['kind'] !== 'patient' || $cut === false) {
+            http_response_code(404);
+            exit();
+        }
+        header('Content-Type: ' . substr($raw, 0, $cut));
+        header('Cache-Control: private, max-age=300');
+        echo base64_decode(substr($raw, $cut + 1));
+        exit();
+    }
+
+    private function packPhoto($file) {
+        if (($file['error'] ?? 1) !== UPLOAD_ERR_OK || ($file['size'] ?? 0) > 2 * 1024 * 1024) {
+            return '';
+        }
+        $raw = file_get_contents($file['tmp_name']);
+        $info = @getimagesizefromstring($raw);
+        $allowed = array('image/jpeg', 'image/png', 'image/webp');
+        if ($raw === false || !$info || !in_array($info['mime'], $allowed, true)) {
+            return '';
+        }
+        $mime = $info['mime'];
+        if (function_exists('imagecreatefromstring')) {
+            $img = @imagecreatefromstring($raw);
+            if ($img) {
+                $w = imagesx($img);
+                $h = imagesy($img);
+                if ($w > 640) {
+                    $nh = max(1, (int) round($h * 640 / $w));
+                    $dst = imagecreatetruecolor(640, $nh);
+                    imagecopyresampled($dst, $img, 0, 0, 0, 0, 640, $nh, $w, $h);
+                    imagedestroy($img);
+                    $img = $dst;
+                }
+                ob_start();
+                imagejpeg($img, null, 72);
+                $raw = ob_get_clean();
+                imagedestroy($img);
+                $mime = 'image/jpeg';
+            }
+        }
+        return $mime . '|' . base64_encode($raw);
+    }
+
     public function deleteOwnAccount() {
         $this->requireUser();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
