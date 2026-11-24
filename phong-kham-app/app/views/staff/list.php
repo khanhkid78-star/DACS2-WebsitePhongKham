@@ -265,8 +265,18 @@ function renderHistory(items) {
         html += "<p><strong>Chẩn đoán:</strong><br>" + historyText(item.diagnosis) + "</p>";
         html += "<p><strong>Kết luận:</strong><br>" + historyText(item.conclusion) + "</p>";
         html += "<p><strong>Ngày tạo hồ sơ:</strong> " + historyText(String(item.created_at || "").replace("T", " ").slice(0, 16)) + "</p>";
+        var services = item.services || [];
+        html += "<p><strong>Dịch vụ khám</strong></p>";
+        if (!services.length) {
+            html += "<p class=\"lead\">Không chọn dịch vụ khám.</p>";
+        } else {
+            services.forEach(function (row) {
+                html += "<p>" + historyText(row.service_name) + " — " + historyText(row.price) + " đ</p>";
+            });
+        }
         var meds = item.medicines || [];
         html += "<p><strong>Đơn thuốc</strong></p>";
+
         if (!meds.length) {
             html += "<p class=\"lead\">Không có đơn thuốc.</p>";
         } else {

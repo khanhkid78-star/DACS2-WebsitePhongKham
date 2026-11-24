@@ -25,10 +25,6 @@ require_once __DIR__ . '/../partials/navbar.php';
         </label>
         <div id="bill-preview" class="lead">Chọn bệnh án để xem người khám, chẩn đoán và đơn thuốc.</div>
         <label>
-            Phí khám
-            <input type="number" name="exam_fee" id="exam-fee" min="0" step="1000" value="250000" required>
-        </label>
-        <label>
             Tổng tiền
             <input type="text" id="bill-total" value="" readonly>
         </label>

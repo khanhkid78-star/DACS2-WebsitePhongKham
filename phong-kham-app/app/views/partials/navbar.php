@@ -66,6 +66,7 @@ $role = Auth::getRole();
         <a href="/index.php?action=invoices">Hóa Đơn</a>
         <a href="/index.php?action=receptionist_appointments">Lịch hẹn</a>
         <a href="/index.php?action=nurse_medicines">Kho thuốc</a>
+        <a href="/index.php?action=services">Dịch vụ khám</a>
         <a href="/index.php?action=admin_users">Tài khoản</a>
     <?php endif; ?>
 </aside>

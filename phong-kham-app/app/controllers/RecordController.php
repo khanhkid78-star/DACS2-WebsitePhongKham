@@ -107,7 +107,7 @@ class RecordController {
                 'symptoms' => $symptoms,
                 'diagnosis' => $diagnosis,
                 'conclusion' => $conclusion,
-            ), $clean);
+            ), $clean, isset($_POST['service_id']) ? $_POST['service_id'] : array());
 
             if ($recordId) {
                 require_once __DIR__ . '/../helpers/Notify.php';
@@ -222,8 +222,13 @@ class RecordController {
             }
         }
 
-        if ($this->bag()['records']->updateWithPrescription($id, $symptoms, $diagnosis, $conclusion, $doctorFilter, $clean)) {
-            Auth::flash('Đã cập nhật bệnh án.', true);
+        $bill = (new Database())->getConnection()->prepare("SELECT 1 FROM invoices WHERE record_id = :id");
+        $bill->execute(array(':id' => $id));
+        $hasInvoice = (bool) $bill->fetchColumn();
+        $picked = isset($_POST['service_id']) ? $_POST['service_id'] : array();
+        
+        if ($this->bag()['records']->updateWithPrescription($id, $symptoms, $diagnosis, $conclusion, $doctorFilter, $clean, $picked)) {
+            Auth::flash($hasInvoice ? 'Đã cập nhật bệnh án. Dịch vụ giữ nguyên vì đã có hóa đơn.' : 'Đã cập nhật bệnh án.', true);
         } else {
             Auth::flash('Không sửa được bệnh án này.');
         }

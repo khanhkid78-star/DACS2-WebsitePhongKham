@@ -205,7 +205,19 @@ switch ($action) {
     case 'staff_delete':
         (new PersonController())->remove();
         break;
-
+    
+    case 'services':
+        (new ServiceController())->show();
+        break;
+    case 'save_service':
+        (new ServiceController())->save();
+        break;
+    case 'delete_service':
+        (new ServiceController())->delete();
+        break;
+    case 'service_options':
+        (new ServiceController())->options();
+        break;
 
     case 'notifications':
         (new AuthController())->notifications();

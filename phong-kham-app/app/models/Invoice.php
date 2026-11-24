@@ -74,6 +74,15 @@ class Invoice {
             $lines[$i]['line_amount'] = $amount;
             $drugTotal += $amount;
         }
+        $svc = $this->conn->prepare("SELECT service_name, price FROM record_services WHERE record_id = :id ORDER BY service_name");
+        $svc->execute(array(':id' => (int) $record_id));
+        $services = $svc->fetchAll(PDO::FETCH_ASSOC);
+        $serviceTotal = 0;
+        foreach ($services as $line) {
+            $serviceTotal += (float) $line['price'];
+        }
+        $row['services'] = $services;
+        $row['service_total'] = $serviceTotal;
         $row['medicines'] = $lines;
         $row['drug_total'] = $drugTotal;
         return $row;
@@ -89,15 +98,11 @@ class Invoice {
         return $stmt->rowCount() > 0;
     }
 
-    public function createFromRecord($record_id, $exam_fee, $payment_method) {
+    public function createFromRecord($record_id, $payment_method) {
         $allowed = array('Tiền mặt', 'Chuyển khoản', 'Thẻ');
         if (!in_array($payment_method, $allowed, true)) {
             return 'Chọn phương thức thanh toán.';
         }
-        if (!is_numeric($exam_fee) || (float) $exam_fee < 0) {
-            return 'Phí khám không hợp lệ.';
-        }
-        $exam_fee = (float) $exam_fee;
 
         $find = $this->conn->prepare(
             "SELECT record_id, patient_id FROM medical_records WHERE record_id = :id"
@@ -146,13 +151,18 @@ class Invoice {
                 "INSERT INTO invoice_details (invoice_id, item_type, quantity, price)
                  VALUES (:invoice_id, :item_type, :quantity, :price)"
             );
-            $detail->execute(array(
-                ':invoice_id' => $invoice_id,
-                ':item_type' => 'Công khám',
-                ':quantity' => 1,
-                ':price' => $exam_fee,
-            ));
-            $total = $exam_fee;
+            $services = $this->conn->prepare("SELECT service_name, price FROM record_services WHERE record_id = :id ORDER BY service_name");
+            $services->execute(array(':id' => $record_id));
+            $total = 0;
+            foreach ($services->fetchAll(PDO::FETCH_ASSOC) as $line) {
+                $detail->execute(array(
+                    ':invoice_id' => $invoice_id,
+                    ':item_type' => $line['service_name'],
+                    ':quantity' => 1,
+                    ':price' => $line['price'],
+                ));
+                $total += (float) $line['price'];
+            }
             foreach ($lines as $line) {
                 $qty = (int) $line['quantity'];
                 $price = (float) $line['price'];

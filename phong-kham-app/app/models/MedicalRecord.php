@@ -125,6 +125,9 @@ class MedicalRecord {
         );
         $medStmt->execute(array(':id' => (int) $record_id));
         $row['medicines'] = $medStmt->fetchAll(PDO::FETCH_ASSOC);
+        $svc = $this->conn->prepare("SELECT service_id, service_name, price FROM record_services WHERE record_id = :id ORDER BY service_name");
+        $svc->execute(array(':id' => (int) $record_id));
+        $row['services'] = $svc->fetchAll(PDO::FETCH_ASSOC);
         return $row;
     }
 
@@ -147,7 +150,7 @@ class MedicalRecord {
         return $stmt->rowCount() > 0;
     }
 
-    public function updateWithPrescription($record_id, $symptoms, $diagnosis, $conclusion, $doctor_id, $lines) {
+    public function updateWithPrescription($record_id, $symptoms, $diagnosis, $conclusion, $doctor_id, $lines, $serviceIds = array()) {
         $this->conn->beginTransaction();
         try {
             $sql = "UPDATE " . $this->table_name . "
@@ -207,6 +210,11 @@ class MedicalRecord {
                     ));
                 }
             }
+
+            $owner = $this->conn->prepare("SELECT doctor_id FROM medical_records WHERE record_id = :id");
+            $owner->execute(array(':id' => $record_id));
+            $this->saveServices($record_id, (int) $owner->fetchColumn(), $serviceIds);
+
             $this->conn->commit();
             return true;
         } catch (Exception $e) {
@@ -217,7 +225,32 @@ class MedicalRecord {
         }
     }
 
-    public function createWithPrescription($data, $lines) {
+    private function saveServices($recordId, $doctorId, $serviceIds) {
+        $bill = $this->conn->prepare("SELECT 1 FROM invoices WHERE record_id = :id");
+        $bill->execute(array(':id' => $recordId));
+        if ($bill->fetchColumn()) {
+            return false;
+        }
+        $this->conn->prepare("DELETE FROM record_services WHERE record_id = :id")->execute(array(':id' => $recordId));
+        $insert = $this->conn->prepare(
+            "INSERT INTO record_services (record_id, service_id, service_name, price)
+             SELECT :record_id, s.service_id, s.name, s.price
+             FROM services s
+             JOIN specialties sp ON sp.specialty_id = s.specialty_id
+             JOIN doctors d ON d.specialty = sp.name AND d.doctor_id = :doctor_id
+             WHERE s.service_id = :service_id"
+        );
+        foreach ($serviceIds as $serviceId) {
+            $insert->execute(array(
+                ':record_id' => $recordId,
+                ':doctor_id' => (int) $doctorId,
+                ':service_id' => (int) $serviceId,
+            ));
+        }
+        return true;
+    }
+
+    public function createWithPrescription($data, $lines, $serviceIds = array()) {
         $check = $this->conn->prepare(
             "SELECT record_id FROM " . $this->table_name . " WHERE appointment_id = :id"
         );
@@ -278,6 +311,7 @@ class MedicalRecord {
                 "UPDATE appointments SET status = 'Completed' WHERE appointment_id = :id"
             );
             $done->execute(array(':id' => $data['appointment_id']));
+            $this->saveServices($record_id, $data['doctor_id'], $serviceIds);
             $this->conn->commit();
             return $record_id;
         } catch (Exception $e) {
@@ -299,7 +333,14 @@ class MedicalRecord {
                        m.conclusion,
                        m.created_at,
                        COALESCE(m.patient_name, p.full_name) AS patient_name,
-                       COALESCE(m.doctor_name, d.full_name) AS doctor_name,
+                        COALESCE(m.doctor_name, d.full_name) AS doctor_name,
+                       (
+                           SELECT json_agg(json_build_object(
+                               'service_name', rs.service_name,
+                               'price', rs.price
+                           ) ORDER BY rs.service_name)
+                           FROM record_services rs WHERE rs.record_id = m.record_id
+                       ) AS services,
                        (
                            SELECT json_agg(json_build_object(
                                'medicine_name', med.name,
@@ -324,6 +365,7 @@ class MedicalRecord {
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($rows as $i => $row) {
             $rows[$i]['medicines'] = !empty($row['medicines']) ? json_decode($row['medicines'], true) : array();
+            $rows[$i]['services'] = !empty($row['services']) ? json_decode($row['services'], true) : array();
         }
         return $rows;
     }

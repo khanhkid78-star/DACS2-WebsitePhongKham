@@ -23,7 +23,7 @@ class InvoiceController {
             exit();
         }
         $recordId = (int) ($_POST['record_id'] ?? 0);
-        $message = $this->model()->createFromRecord($recordId, $_POST['exam_fee'] ?? '', $_POST['payment_method'] ?? '');
+        $message = $this->model()->createFromRecord($recordId, $_POST['payment_method'] ?? '');
 
         $mailPatientId = 0;
         $emailSubject = '';

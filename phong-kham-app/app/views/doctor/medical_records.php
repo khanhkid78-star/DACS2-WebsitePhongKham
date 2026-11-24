@@ -79,6 +79,10 @@ require_once __DIR__ . '/../partials/navbar.php';
             <label>Triệu chứng <textarea name="symptoms" id="record-symptoms" rows="3" required></textarea></label>
             <label>Chẩn đoán <textarea name="diagnosis" id="record-diagnosis" rows="3" required></textarea></label>
             <label>Kết luận <textarea name="conclusion" id="record-conclusion" rows="3" required></textarea></label>
+            <div id="service-picks">
+                <p class="lead" id="service-specialty">Chọn lịch để hiện dịch vụ của chuyên khoa.</p>
+                <div id="service-list"></div>
+            </div>
             <div id="record-rx">
                 <p class="lead">Đơn thuốc, bỏ trống nếu chưa kê. Tick dòng rồi bấm xóa.</p>
                 <div id="rx-lines">

@@ -380,6 +380,33 @@ if (window.jQuery) {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
 
+    function paintServicePicks(data, selected) {
+        var box = document.getElementById("service-list");
+        if (!box) return;
+        var picked = {};
+        (selected || data.selected || []).forEach(function (id) { picked[String(id)] = true; });
+        document.getElementById("service-specialty").textContent = data.specialty
+            ? ("Dịch vụ chuyên khoa " + data.specialty + ". Chọn một hoặc nhiều.")
+            : "Bác sĩ chưa thuộc chuyên khoa nào trong danh mục, nên không có dịch vụ để chọn.";
+        var html = "";
+        (data.services || []).forEach(function (row) {
+            html += "<label class=\"rx-check\"><input type=\"checkbox\" name=\"service_id[]\" value=\"" + row.service_id + "\""
+                + (picked[String(row.service_id)] ? " checked" : "") + "> "
+                + esc(row.name) + " — " + esc(vnd(row.price)) + " đ</label>";
+        });
+        box.innerHTML = html;
+    }
+    function loadServicePicks(appointmentId, recordId) {
+        var query = recordId ? ("record_id=" + recordId) : ("appointment_id=" + (appointmentId || ""));
+        if (!recordId && !appointmentId) {
+            paintServicePicks({ specialty: "", services: [] }, []);
+            return;
+        }
+        jQuery.getJSON("/index.php?action=service_options&" + query).done(function (res) {
+            if (res && res.ok) paintServicePicks(res.data, res.data.selected);
+        });
+    }
+
     jQuery("#open-new-record").on("click", function () {
         jQuery("#record-title").text("Ghi bệnh án mới");
         jQuery("#record-form").attr("action", "/index.php?action=save_record");
@@ -389,6 +416,7 @@ if (window.jQuery) {
         jQuery("#record-create-fields select").prop("disabled", false).val("");
         jQuery("#record-symptoms, #record-diagnosis, #record-conclusion").val("");
         clearRx();
+        paintServicePicks({ specialty: "", services: [] }, []);
         jQuery("#record-submit").text("Lưu bệnh án");
         openBox("record-modal");
     });
@@ -421,7 +449,11 @@ if (window.jQuery) {
                 jQuery("#record-diagnosis").val(d.diagnosis || "");
                 jQuery("#record-conclusion").val(d.conclusion || "");
                 fillRx(d.medicines || []);
+                loadServicePicks(0, data.id);
             });
+    });
+    jQuery(document).on("change", "#record-form [data-appointment]", function () {
+        loadServicePicks(jQuery(this).val(), 0);
     });
 
     function fillRecordDetail(d) {
@@ -439,6 +471,17 @@ if (window.jQuery) {
         html += "<p><strong>Triệu chứng:</strong><br>" + esc(d.symptoms || "").replace(/\n/g, "<br>") + "</p>";
         html += "<p><strong>Chẩn đoán:</strong><br>" + esc(d.diagnosis || "").replace(/\n/g, "<br>") + "</p>";
         html += "<p><strong>Kết luận:</strong><br>" + esc(d.conclusion || "").replace(/\n/g, "<br>") + "</p>";
+        var services = d.services || [];
+        html += "<h3>Dịch vụ khám</h3>";
+        if (!services.length) {
+            html += "<p class=\"lead\">Không chọn dịch vụ khám.</p>";
+        } else {
+            html += "<div class=\"table-wrap\"><table><thead><tr><th>Dịch vụ</th><th>Giá</th></tr></thead><tbody>";
+            services.forEach(function (row) {
+                html += "<tr><td>" + esc(row.service_name || "") + "</td><td>" + esc(vnd(row.price)) + " đ</td></tr>";
+            });
+            html += "</tbody></table></div>";
+        }
         var meds = d.medicines || [];
         html += "<h3 style=\"margin-top:1rem\">Đơn thuốc</h3>";
         if (!meds.length) {
@@ -641,17 +684,16 @@ if (window.jQuery) {
         
 
         var billRecord = document.getElementById("bill-record");
-        var billState = { drugTotal: 0 };
+        var billState = { drugTotal: 0, serviceTotal: 0 };
         function paintBillTotal() {
-            var fee = Number(jQuery("#exam-fee").val() || 0);
-            if (fee < 0) fee = 0;
-            jQuery("#bill-total").val(vnd(fee + billState.drugTotal) + " đ");
+            jQuery("#bill-total").val(vnd(billState.serviceTotal + billState.drugTotal) + " đ");
         }
+
         if (billRecord) {
-            jQuery("#exam-fee").on("input", paintBillTotal);
             jQuery(billRecord).on("change", function () {
                 var id = jQuery(this).val();
                 billState.drugTotal = 0;
+                billState.serviceTotal = 0;
                 if (!id) {
                     jQuery("#bill-preview").html("Chọn bệnh án để xem người khám, chẩn đoán và đơn thuốc.");
                     jQuery("#bill-total").val("");
@@ -665,6 +707,7 @@ if (window.jQuery) {
                         }
                         var d = res.data;
                         billState.drugTotal = Number(d.drug_total || 0);
+                        billState.serviceTotal = Number(d.service_total || 0);
                         var html = "";
                         html += "<p><strong>Bệnh nhân:</strong> " + esc(d.patient_name || "") + "</p>";
                         html += "<p><strong>Bác sĩ:</strong> " + esc(d.doctor_name || "") + "</p>";
@@ -673,7 +716,19 @@ if (window.jQuery) {
                         html += "<p><strong>Triệu chứng:</strong> " + esc(d.symptoms || "") + "</p>";
                         html += "<p><strong>Chẩn đoán:</strong> " + esc(d.diagnosis || "") + "</p>";
                         html += "<p><strong>Kết luận:</strong> " + esc(d.conclusion || "") + "</p>";
+                        var services = d.services || [];
+                        html += "<h3>Dịch vụ khám</h3>";
+                        if (!services.length) {
+                            html += "<p>Bệnh án chưa chọn dịch vụ. Tiền khám = 0.</p>";
+                        } else {
+                            html += "<div class=\"table-wrap\"><table><thead><tr><th>Dịch vụ</th><th>Giá</th></tr></thead><tbody>";
+                            services.forEach(function (row) {
+                                html += "<tr><td>" + esc(row.service_name || "") + "</td><td>" + esc(vnd(row.price)) + " đ</td></tr>";
+                            });
+                            html += "</tbody></table></div>";
+                        }
                         var meds = d.medicines || [];
+                        
                         if (!meds.length) {
                             html += "<p>Không có đơn thuốc. Tiền thuốc = 0.</p>";
                         } else {
