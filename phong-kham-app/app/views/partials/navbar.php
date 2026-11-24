@@ -71,13 +71,10 @@ $role = Auth::getRole();
 </aside>
 <script>
 (function () {
-    var key = "pk_side";
     var btn = document.getElementById("side-toggle");
     var side = document.getElementById("side-nav");
-    if (!btn || !side) {
-        document.body.classList.remove("side-open");
-        return;
-    }
+    document.body.classList.remove("side-open");
+    if (!btn || !side) return;
     function place() {
         var bar = document.querySelector(".navbar");
         if (!bar) return;
@@ -89,9 +86,6 @@ $role = Auth::getRole();
     function preview(on) {
         document.body.classList.toggle("side-hover", on);
     }
-    try {
-        if (localStorage.getItem(key) === "1") document.body.classList.add("side-open");
-    } catch (e) {}
     place();
     window.addEventListener("resize", place);
     window.addEventListener("scroll", place);
@@ -103,10 +97,13 @@ $role = Auth::getRole();
             preview(false);
         });
     });
-    btn.addEventListener("click", function () {
-        document.body.classList.toggle("side-open");
-        try { localStorage.setItem(key, document.body.classList.contains("side-open") ? "1" : "0"); } catch (e) {}
-    });
+    side.addEventListener("wheel", function (e) {
+        var room = side.scrollHeight - side.clientHeight;
+        var stuck = room <= 0
+            || (side.scrollTop <= 0 && e.deltaY < 0)
+            || (side.scrollTop >= room - 1 && e.deltaY > 0);
+        if (stuck) window.scrollBy(0, e.deltaY);
+    }, { passive: true });
 })();
 </script>
 <?php endif; ?>
