@@ -16,7 +16,7 @@ $role = Auth::getRole();
     </a>
 
 
-    <?php if (Auth::isLoggedIn()): ?>
+        <?php if (Auth::isLoggedIn()): ?>
         <div class="nav-links">
             <span class="bell-wrap">
                 <button class="nav-bell" id="nav-bell" type="button" aria-label="Thông báo">
@@ -28,15 +28,19 @@ $role = Auth::getRole();
             <span class="nav-user"><?php echo htmlspecialchars((string) ($_SESSION['username'] ?? '')); ?></span>
             <a href="/index.php?action=logout<?php echo Auth::currentTab() !== '' ? '&tab=' . urlencode(Auth::currentTab()) : ''; ?>" class="nav-logout">Đăng xuất</a>
         </div>
+    <?php else: ?>
+        <div class="nav-links">
+            <a href="/index.php">Trang Chủ</a>
+            <a href="/index.php?action=booking">Đặt lịch khám</a>
+            <a class="nav-login" href="/index.php?action=login&next=booking" data-open="login">Đăng nhập</a>
+            <a class="nav-register" href="/index.php?action=register" data-open="register">Đăng ký</a>
+        </div>
     <?php endif; ?>
 </div>
 
+<?php if (Auth::isLoggedIn()): ?>
+<button class="side-toggle" id="side-toggle" type="button" aria-label="Đóng mở mục lục"><span></span></button>
 <aside class="side-nav" id="side-nav">
-
-    <button class="side-toggle" id="side-toggle" type="button" aria-label="Đóng mở mục lục">
-        <span></span>
-    </button>
-
     <a href="/index.php">Trang Chủ</a>
     <?php if ($role === 'patient'): ?>
         <a href="/index.php?action=booking">Đặt lịch khám</a>
@@ -63,10 +67,6 @@ $role = Auth::getRole();
         <a href="/index.php?action=receptionist_appointments">Lịch hẹn</a>
         <a href="/index.php?action=nurse_medicines">Kho thuốc</a>
         <a href="/index.php?action=admin_users">Tài khoản</a>
-    <?php else: ?>
-        <a class="nav-login" href="/index.php?action=login&next=booking" data-open="login">Đăng nhập</a>
-        <a class="nav-register" href="/index.php?action=register" data-open="register">Đăng ký</a>
-        <a href="/index.php?action=booking">Đặt lịch khám</a>
     <?php endif; ?>
 </aside>
 <script>
@@ -74,35 +74,42 @@ $role = Auth::getRole();
     var key = "pk_side";
     var btn = document.getElementById("side-toggle");
     var side = document.getElementById("side-nav");
+    if (!btn || !side) {
+        document.body.classList.remove("side-open");
+        return;
+    }
     function place() {
         var bar = document.querySelector(".navbar");
-        if (!bar || !side) return;
+        if (!bar) return;
         var bottom = Math.max(0, bar.getBoundingClientRect().bottom);
         side.style.top = bottom + "px";
         side.style.height = "calc(100vh - " + bottom + "px)";
+        btn.style.top = (bottom + 10) + "px";
     }
-
-    function paint() {}
-    
+    function preview(on) {
+        document.body.classList.toggle("side-hover", on);
+    }
     try {
-        if (localStorage.getItem(key) !== "0") document.body.classList.add("side-open");
+        if (localStorage.getItem(key) === "1") document.body.classList.add("side-open");
     } catch (e) {}
-    paint();
     place();
     window.addEventListener("resize", place);
     window.addEventListener("scroll", place);
-    if (btn) {
-        btn.addEventListener("click", function () {
-            document.body.classList.toggle("side-open");
-            try {
-                localStorage.setItem(key, document.body.classList.contains("side-open") ? "1" : "0");
-            } catch (e) {}
-            paint();
+    [btn, side].forEach(function (el) {
+        el.addEventListener("mouseenter", function () { preview(true); });
+        el.addEventListener("mouseleave", function (e) {
+            var to = e.relatedTarget;
+            if (to && (to === btn || to === side || btn.contains(to) || side.contains(to))) return;
+            preview(false);
         });
-    }
+    });
+    btn.addEventListener("click", function () {
+        document.body.classList.toggle("side-open");
+        try { localStorage.setItem(key, document.body.classList.contains("side-open") ? "1" : "0"); } catch (e) {}
+    });
 })();
 </script>
-</div>
+<?php endif; ?>
 
 <?php if (!Auth::isLoggedIn()): ?>
 <div class="modal" id="auth-modal">
