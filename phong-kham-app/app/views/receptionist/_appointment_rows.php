@@ -17,7 +17,7 @@ if (empty($appointments)): ?>
         'status' => (string) $app['status'],
     ), JSON_UNESCAPED_UNICODE), ENT_QUOTES);
 ?>
-    <tr>
+    <tr class="appt-open" data-appointment-id="<?php echo (int) $app['appointment_id']; ?>">
         <td>#<?php echo (int) $app['appointment_id']; ?></td>
         <td><?php echo htmlspecialchars((string) $app['patient_name']); ?></td>
         <td><?php echo htmlspecialchars((string) $app['patient_phone']); ?></td>

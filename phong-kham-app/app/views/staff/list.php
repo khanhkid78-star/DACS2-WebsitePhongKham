@@ -137,6 +137,10 @@ $labels = array(
         <h2 id="detail-title">Chi tiết</h2>
         <img id="detail-photo" class="avatar avatar-lg" alt="" hidden>
         <div id="detail-body"></div>
+
+        <button class="btn-ghost" type="button" id="history-toggle" hidden>Lịch sử bệnh án</button>
+        <div id="history-box" hidden></div>
+
     </div>
 </div>
 
@@ -213,12 +217,26 @@ function loadPerson(kind, id, mode) {
                 html += "<p><strong>" + fieldLabels[key] + ":</strong> " + esc(d[key]) + "</p>";
             });
             document.getElementById("detail-body").innerHTML = html;
+
+            var histBtn = document.getElementById("history-toggle");
+            var histBox = document.getElementById("history-box");
+            histBox.hidden = true;
+            histBox.innerHTML = "";
+            var canHistory = kind === "patient" || kind === "doctor";
+            histBtn.hidden = !canHistory;
+            histBtn.textContent = "Lịch sử bệnh án";
+            histBtn.setAttribute("data-kind", kind);
+            histBtn.setAttribute("data-id", String(id));
+            histBtn.setAttribute("data-loaded", "");
+
             openBox("person-detail");
         })
 
         .fail(function () {
             document.getElementById("detail-title").textContent = "Chi tiết";
             document.getElementById("detail-body").innerHTML = "<p class=\"lead\">Không tải được chi tiết hồ sơ.</p>";
+            document.getElementById("history-toggle").hidden = true;
+            document.getElementById("history-box").hidden = true;
             openBox("person-detail");
         });
 }
@@ -229,6 +247,63 @@ document.getElementById("open-person").addEventListener("click", function () {
     document.getElementById("person-title").textContent = "Thêm hồ sơ";
     document.getElementById("person-preview").hidden = true;
     openBox("person-modal");
+});
+
+
+function historyText(value) {
+    return esc(value == null ? "" : String(value)).replace(/\n/g, "<br>");
+}
+function renderHistory(items) {
+    if (!items.length) return "<p class=\"lead\">Chưa có bệnh án.</p>";
+    var html = "";
+    items.forEach(function (item) {
+        html += "<article class=\"history-item\">";
+        html += "<p><strong>Bệnh nhân:</strong> " + historyText(item.patient_name) + "</p>";
+        html += "<p><strong>Bác sĩ:</strong> " + historyText(item.doctor_name) + "</p>";
+        html += "<p><strong>Ngày khám:</strong> " + historyText(String(item.visit_date || "").replace("T", " ").slice(0, 16)) + "</p>";
+        html += "<p><strong>Triệu chứng:</strong><br>" + historyText(item.symptoms) + "</p>";
+        html += "<p><strong>Chẩn đoán:</strong><br>" + historyText(item.diagnosis) + "</p>";
+        html += "<p><strong>Kết luận:</strong><br>" + historyText(item.conclusion) + "</p>";
+        html += "<p><strong>Ngày tạo hồ sơ:</strong> " + historyText(String(item.created_at || "").replace("T", " ").slice(0, 16)) + "</p>";
+        var meds = item.medicines || [];
+        html += "<p><strong>Đơn thuốc</strong></p>";
+        if (!meds.length) {
+            html += "<p class=\"lead\">Không có đơn thuốc.</p>";
+        } else {
+            html += "<div class=\"table-wrap\"><table><thead><tr><th>Thuốc</th><th>Đơn vị</th><th>SL</th><th>Liều</th><th>Cách dùng</th><th>Đơn giá</th></tr></thead><tbody>";
+            meds.forEach(function (med) {
+                html += "<tr><td>" + historyText(med.medicine_name) + "</td><td>" + historyText(med.unit) + "</td><td>" + historyText(med.quantity) + "</td><td>" + historyText(med.dosage) + "</td><td>" + historyText(med.usage_instructions) + "</td><td>" + historyText(med.price) + "</td></tr>";
+            });
+            html += "</tbody></table></div>";
+        }
+        html += "</article>";
+    });
+    return html;
+}
+document.getElementById("history-toggle").addEventListener("click", function () {
+    var box = document.getElementById("history-box");
+    if (!box.hidden) {
+        box.hidden = true;
+        this.textContent = "Lịch sử bệnh án";
+        return;
+    }
+    if (this.getAttribute("data-loaded") === "1") {
+        box.hidden = false;
+        this.textContent = "Ẩn lịch sử";
+        return;
+    }
+    var btn = this;
+    box.hidden = false;
+    box.innerHTML = "<p class=\"lead\">Đang tải…</p>";
+    jQuery.getJSON("/index.php?action=staff_history&kind=" + encodeURIComponent(btn.getAttribute("data-kind")) + "&id=" + encodeURIComponent(btn.getAttribute("data-id")))
+        .done(function (res) {
+            box.innerHTML = renderHistory(res && res.items ? res.items : []);
+            btn.setAttribute("data-loaded", "1");
+            btn.textContent = "Ẩn lịch sử";
+        })
+        .fail(function () {
+            box.innerHTML = "<p class=\"lead\">Không tải được lịch sử bệnh án.</p>";
+        });
 });
 
 window.addEventListener("load", function () {

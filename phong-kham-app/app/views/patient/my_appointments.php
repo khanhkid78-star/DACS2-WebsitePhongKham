@@ -36,7 +36,8 @@ require_once __DIR__ . '/../partials/navbar.php';
         </tr>
         <tbody id="mine-appts">
         <?php foreach ($my_appointments as $app): ?>
-        <tr data-date="<?php echo date('Y-m-d', strtotime($app['appointment_date'])); ?>">
+        <tr class="appt-open" data-appointment-id="<?php echo (int) $app['appointment_id']; ?>" 
+        data-date="<?php echo date('Y-m-d', strtotime($app['appointment_date'])); ?>">
             <td>#<?php echo (int) $app['appointment_id']; ?></td>
             <td>BS. <?php echo htmlspecialchars((string) $app['doctor_name']); ?></td>
             <td><?php echo htmlspecialchars((string) $app['specialty']); ?></td>

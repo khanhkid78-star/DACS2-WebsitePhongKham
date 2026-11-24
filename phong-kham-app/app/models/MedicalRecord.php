@@ -287,4 +287,52 @@ class MedicalRecord {
             throw $e;
         }
     }
+
+
+    public function historyFor($column, $id) {
+        if (!in_array($column, array('patient_id', 'doctor_id'), true)) {
+            return array();
+        }
+        $sql = "SELECT m.visit_date,
+                       m.symptoms,
+                       m.diagnosis,
+                       m.conclusion,
+                       m.created_at,
+                       COALESCE(m.patient_name, p.full_name) AS patient_name,
+                       COALESCE(m.doctor_name, d.full_name) AS doctor_name,
+                       (
+                           SELECT json_agg(json_build_object(
+                               'medicine_name', med.name,
+                               'unit', med.unit,
+                               'quantity', pd.quantity,
+                               'dosage', pd.dosage,
+                               'usage_instructions', pd.usage_instructions,
+                               'price', med.price
+                           ) ORDER BY pd.id)
+                           FROM prescriptions pr
+                           JOIN prescription_details pd ON pd.prescription_id = pr.prescription_id
+                           JOIN medicines med ON med.medicine_id = pd.medicine_id
+                           WHERE pr.record_id = m.record_id
+                       ) AS medicines
+                FROM medical_records m
+                LEFT JOIN patients p ON p.patient_id = m.patient_id
+                LEFT JOIN doctors d ON d.doctor_id = m.doctor_id
+                WHERE m." . $column . " = :id
+                ORDER BY m.visit_date DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute(array(':id' => (int) $id));
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as $i => $row) {
+            $rows[$i]['medicines'] = !empty($row['medicines']) ? json_decode($row['medicines'], true) : array();
+        }
+        return $rows;
+    }
+
+    public function findIdByAppointment($appointment_id) {
+        $stmt = $this->conn->prepare(
+            "SELECT record_id FROM medical_records WHERE appointment_id = :id ORDER BY record_id DESC LIMIT 1"
+        );
+        $stmt->execute(array(':id' => (int) $appointment_id));
+        return (int) $stmt->fetchColumn();
+    }
 }

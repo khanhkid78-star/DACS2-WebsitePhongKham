@@ -287,6 +287,67 @@ class RecordController {
         exit();
     }
 
+    public function history() {
+        $kind = $_GET['kind'] ?? '';
+        if ($kind === 'patient') {
+            Auth::checkRole(array('admin', 'receptionist'));
+            $column = 'patient_id';
+        } elseif ($kind === 'doctor') {
+            Auth::checkRole(array('admin'));
+            $column = 'doctor_id';
+        } else {
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(array('ok' => false, 'error' => 'Không có lịch sử cho mục này'));
+            exit();
+        }
+        $id = (int) ($_GET['id'] ?? 0);
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(array(
+            'ok' => true,
+            'items' => $id > 0 ? $this->bag()['records']->historyFor($column, $id) : array(),
+        ), JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    public function byAppointment() {
+        Auth::checkRole(array('admin', 'receptionist', 'patient', 'doctor'));
+        header('Content-Type: application/json; charset=UTF-8');
+        $appointmentId = (int) ($_GET['appointment_id'] ?? 0);
+        $db = (new Database())->getConnection();
+        $appt = $db->prepare("SELECT patient_id, doctor_id FROM appointments WHERE appointment_id = :id");
+        $appt->execute(array(':id' => $appointmentId));
+        $row = $appt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            echo json_encode(array('ok' => false, 'error' => 'Không thấy lịch hẹn'));
+            exit();
+        }
+        $role = Auth::getRole();
+        $doctorFilter = null;
+        $patientFilter = null;
+        if ($role === 'patient' && (int) $row['patient_id'] !== (int) ($_SESSION['patient_id'] ?? 0)) {
+            echo json_encode(array('ok' => false, 'error' => 'Không xem được lịch của người khác'));
+            exit();
+        }
+        if ($role === 'doctor' && (int) $row['doctor_id'] !== (int) ($_SESSION['doctor_id'] ?? 0)) {
+            echo json_encode(array('ok' => false, 'error' => 'Không xem được lịch của bác sĩ khác'));
+            exit();
+        }
+        if ($role === 'patient') {
+            $patientFilter = (int) $row['patient_id'];
+        }
+        if ($role === 'doctor') {
+            $doctorFilter = (int) $row['doctor_id'];
+        }
+        $recordId = $this->bag()['records']->findIdByAppointment($appointmentId);
+        if ($recordId < 1) {
+            echo json_encode(array('ok' => false, 'error' => 'Lịch này chưa có bệnh án'));
+            exit();
+        }
+        $detail = $this->bag()['records']->getDetail($recordId, $doctorFilter, $patientFilter);
+        echo json_encode(array('ok' => (bool) $detail, 'data' => $detail), JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
     private function readLines() {
         $ids = isset($_POST['medicine_id']) ? (array) $_POST['medicine_id'] : array();
         $qtys = isset($_POST['quantity']) ? (array) $_POST['quantity'] : array();

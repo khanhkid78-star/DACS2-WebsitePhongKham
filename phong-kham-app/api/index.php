@@ -169,6 +169,14 @@ switch ($action) {
         (new RecordController())->detail();
         break;
 
+        case 'staff_history':
+        (new RecordController())->history();
+        break;
+    case 'appointment_record':
+        (new RecordController())->byAppointment();
+        break;
+
+
     case 'medicine_rows':
         (new MedicineController())->rows();
         break;
