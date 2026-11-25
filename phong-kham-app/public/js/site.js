@@ -385,9 +385,18 @@ if (window.jQuery) {
         if (!box) return;
         var picked = {};
         (selected || data.selected || []).forEach(function (id) { picked[String(id)] = true; });
-        document.getElementById("service-specialty").textContent = data.specialty
-            ? ("Dịch vụ chuyên khoa " + data.specialty + ". Chọn một hoặc nhiều.")
-            : "Bác sĩ chưa thuộc chuyên khoa nào trong danh mục, nên không có dịch vụ để chọn.";
+
+        var label = document.getElementById("service-specialty");
+        if (data.services && data.services.length) {
+            label.textContent = "Dịch vụ chuyên khoa " + data.specialty + ". Chọn một hoặc nhiều.";
+        } else if (data.doctor_specialty && data.specialty) {
+            label.textContent = "Chuyên khoa " + data.doctor_specialty + " đã khớp, nhưng bảng services chưa có dịch vụ nào.";
+        } else if (data.doctor_specialty) {
+            label.textContent = "Bác sĩ đang ghi là \"" + data.doctor_specialty + "\", không khớp tên trong bảng specialties.";
+        } else {
+            label.textContent = "Chọn lịch đã duyệt để hiện dịch vụ của chuyên khoa.";
+        }
+        
         var html = "";
         (data.services || []).forEach(function (row) {
             html += "<label class=\"rx-check\"><input type=\"checkbox\" name=\"service_id[]\" value=\"" + row.service_id + "\""

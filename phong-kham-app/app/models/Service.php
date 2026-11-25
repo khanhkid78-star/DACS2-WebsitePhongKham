@@ -46,33 +46,44 @@ class Service {
 
     public function catalog($appointmentId, $recordId) {
         if ($recordId > 0) {
-            $sql = "SELECT s.service_id, s.name, s.price, sp.name AS specialty
-                    FROM services s
-                    JOIN specialties sp ON sp.specialty_id = s.specialty_id
-                    JOIN doctors d ON d.specialty = sp.name
-                    JOIN medical_records m ON m.doctor_id = d.doctor_id
-                    WHERE m.record_id = :id ORDER BY s.name";
-            $key = $recordId;
+            $who = $this->conn->prepare(
+                "SELECT btrim(d.specialty) AS specialty
+                 FROM medical_records m
+                 JOIN doctors d ON d.doctor_id = m.doctor_id
+                 WHERE m.record_id = :id"
+            );
+            $who->execute(array(':id' => (int) $recordId));
         } else {
-            $sql = "SELECT s.service_id, s.name, s.price, sp.name AS specialty
-                    FROM services s
-                    JOIN specialties sp ON sp.specialty_id = s.specialty_id
-                    JOIN doctors d ON d.specialty = sp.name
-                    JOIN appointments a ON a.doctor_id = d.doctor_id
-                    WHERE a.appointment_id = :id ORDER BY s.name";
-            $key = $appointmentId;
+            $who = $this->conn->prepare(
+                "SELECT btrim(d.specialty) AS specialty
+                 FROM appointments a
+                 JOIN doctors d ON d.doctor_id = a.doctor_id
+                 WHERE a.appointment_id = :id"
+            );
+            $who->execute(array(':id' => (int) $appointmentId));
         }
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute(array(':id' => (int) $key));
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $doctorSpecialty = trim((string) $who->fetchColumn());
+        $rows = array();
+        if ($doctorSpecialty !== '') {
+            $stmt = $this->conn->prepare(
+                "SELECT s.service_id, s.name, s.price, btrim(sp.name) AS specialty
+                 FROM services s
+                 JOIN specialties sp ON sp.specialty_id = s.specialty_id
+                 WHERE lower(btrim(sp.name)) = lower(:specialty)
+                 ORDER BY s.name"
+            );
+            $stmt->execute(array(':specialty' => $doctorSpecialty));
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
         $picked = array();
         if ($recordId > 0) {
             $sel = $this->conn->prepare("SELECT service_id FROM record_services WHERE record_id = :id");
-            $sel->execute(array(':id' => $recordId));
+            $sel->execute(array(':id' => (int) $recordId));
             $picked = array_map('intval', $sel->fetchAll(PDO::FETCH_COLUMN));
         }
         return array(
-            'specialty' => $rows ? $rows[0]['specialty'] : '',
+            'specialty' => $rows ? $rows[0]['specialty'] : $doctorSpecialty,
+            'doctor_specialty' => $doctorSpecialty,
             'services' => $rows,
             'selected' => $picked,
         );

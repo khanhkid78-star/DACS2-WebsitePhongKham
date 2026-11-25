@@ -237,7 +237,8 @@ class MedicalRecord {
              SELECT :record_id, s.service_id, s.name, s.price
              FROM services s
              JOIN specialties sp ON sp.specialty_id = s.specialty_id
-             JOIN doctors d ON d.specialty = sp.name AND d.doctor_id = :doctor_id
+            JOIN doctors d ON d.doctor_id = :doctor_id
+                AND lower(btrim(d.specialty)) = lower(btrim(sp.name))
              WHERE s.service_id = :service_id"
         );
         foreach ($serviceIds as $serviceId) {
