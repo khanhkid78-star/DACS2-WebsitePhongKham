@@ -27,6 +27,7 @@ require_once __DIR__ . '/../app/controllers/InvoiceController.php';
 require_once __DIR__ . '/../app/controllers/MedicineController.php';
 require_once __DIR__ . '/../app/controllers/AdminController.php';
 require_once __DIR__ . '/../app/controllers/PersonController.php';
+require_once __DIR__ . '/../app/controllers/ServiceController.php';
 
 Auth::startSession();
 
