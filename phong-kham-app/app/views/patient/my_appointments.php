@@ -52,6 +52,8 @@ require_once __DIR__ . '/../partials/navbar.php';
                     <span class="badge badge-done">Đã khám xong</span>
                 <?php elseif ($app['status'] === 'Cancelled'): ?>
                     <span class="badge badge-cancel">Đã hủy</span>
+                <?php elseif ($app['status'] === 'NoShow'): ?>
+                    <span class="badge badge-cancel">Trễ hẹn</span>
                 <?php else: ?>
                     <?php echo htmlspecialchars((string) $app['status']); ?>
                 <?php endif; ?>

@@ -313,7 +313,7 @@ if (window.jQuery) {
 
     jQuery(document).on("click", "[data-appt]", function () {
         var data = JSON.parse(jQuery(this).attr("data-appt"));
-        if (data.status === "Cancelled") {
+        if (data.status === "Cancelled" || data.status === "NoShow") {
             return;
         }
         jQuery("#appt-id").val(data.id);

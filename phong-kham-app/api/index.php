@@ -31,6 +31,25 @@ require_once __DIR__ . '/../app/controllers/ServiceController.php';
 
 Auth::startSession();
 
+try {
+    $sweepDb = (new Database())->getConnection();
+    if ($sweepDb) {
+        $sweepMails = (new Appointment($sweepDb))->sweep();
+        if ($sweepMails) {
+            register_shutdown_function(function () use ($sweepDb, $sweepMails) {
+                if (function_exists('fastcgi_finish_request')) {
+                    @fastcgi_finish_request();
+                }
+                require_once __DIR__ . '/../app/helpers/Notify.php';
+                foreach ($sweepMails as $mail) {
+                    Notify::mailPatient($sweepDb, $mail['patient_id'], $mail['subject'], $mail['letter']);
+                }
+            });
+        }
+    }
+} catch (Exception $e) {
+}
+
 $action = isset($_GET['action']) ? $_GET['action'] : 'home';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['posted_user_id'])) {
@@ -94,15 +113,29 @@ switch ($action) {
         (new AdminController())->listUsers();
         break;
 
+    case 'doctor_photo':
+        require_once __DIR__ . '/../app/config/database.php';
+        require_once __DIR__ . '/../app/models/Person.php';
+        $photo = (new Person((new Database())->getConnection()))->readPhoto('doctor', (int) ($_GET['id'] ?? 0));
+        if (!$photo) {
+            http_response_code(404);
+            exit();
+        }
+        header('Content-Type: ' . $photo['mime']);
+        header('Cache-Control: public, max-age=3600');
+        echo $photo['bytes'];
+        exit();
+
     case 'home':
 
     case 'about':
         require_once __DIR__ . '/../app/config/database.php';
         $db = (new Database())->getConnection();
         $doctors = $db->query(
-            "SELECT doctor_id, full_name, specialty
+            "SELECT doctor_id, full_name, specialty, degree, gender,
+                    (photo IS NOT NULL AND photo <> '') AS has_photo
              FROM doctors
-             ORDER BY full_name"
+             ORDER BY specialty, full_name"
         )->fetchAll(PDO::FETCH_ASSOC);
         require __DIR__ . '/../app/views/home.php';
         break;

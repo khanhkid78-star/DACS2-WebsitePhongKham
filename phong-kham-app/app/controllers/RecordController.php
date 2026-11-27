@@ -76,7 +76,7 @@ class RecordController {
         $appointment = $bag['appointments']->findScheduled($appointmentId, $filter);
 
         if (!$appointment) {
-            Auth::flash('Lịch này chưa được duyệt, hoặc không thuộc bạn.');
+            Auth::flash('Lịch chưa duyệt, không thuộc bạn, hoặc đã quá 2 giờ.');
             header('Location: /index.php?action=doctor_records');
             exit();
         }

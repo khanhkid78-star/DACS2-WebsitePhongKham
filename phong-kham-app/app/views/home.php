@@ -66,6 +66,13 @@ $prices = array(
             </div>
         <?php endif; ?>
     </section>
+
+    <?php if (Auth::isLoggedIn() && $role !== 'patient'): ?>
+            <section class="section">
+                <p class="lead">Các việc trong ca nằm ở mục lục bên trái. Trang này chỉ để vào nhanh.</p>
+            </section>
+        <?php require_once __DIR__ . '/partials/footer.php'; return; ?>
+    <?php endif; ?>
 <?php endif; ?>
 
 <section class="hero">
@@ -122,31 +129,24 @@ $prices = array(
 </section>
 
 <section class="section" id="bac-si">
-    <h2>Bác sĩ đang nhận lịch</h2>
-    <?php if (empty($doctors)): ?>
-        <p class="lead">Chưa có dữ liệu bác sĩ.</p>
-    <?php else: ?>
-        <div class="grid-4">
-            <?php foreach ($doctors as $doc): ?>
-                <article class="doctor">
-
-                    <span class="doc-initial">
-                        <?php echo htmlspecialchars(mb_substr($doc['full_name'], 0, 1)); ?>
-                    </span>
-
-                    <h3>
-                        BS. <?php echo htmlspecialchars($doc['full_name']); ?>
-                    </h3>
-                    <p><?php echo htmlspecialchars($doc['specialty']); ?></p>
-                    <p>
-                        <a class="doc-book" href="/index.php?action=booking&doctor_id=<?php echo (int) $doc['doctor_id']; ?>">
-                            Đặt với bác sĩ này
-                        </a>
-                    </p>
-                </article>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
+    <p class="kicker">Đội ngũ</p>
+    <h2>Bác sĩ nhận khám tại Hưng Định</h2>
+    <p class="lead">Mỗi bác sĩ nhận một chuyên khoa. Chọn đúng người trước khi gửi giờ khám.</p>
+    <?php foreach ($doctors as $doc): ?>
+        <article class="doc-band">
+            <?php if (!empty($doc['has_photo']) && ($doc['has_photo'] === true || $doc['has_photo'] === 't' || $doc['has_photo'] === '1')): ?>
+                <img class="doc-portrait" src="/index.php?action=doctor_photo&id=<?php echo (int) $doc['doctor_id']; ?>" alt="">
+            <?php else: ?>
+                <span class="doc-portrait doc-fallback"><?php echo htmlspecialchars(mb_substr($doc['full_name'], 0, 1)); ?></span>
+            <?php endif; ?>
+            <div>
+                <p class="kicker"><?php echo htmlspecialchars((string) $doc['specialty']); ?></p>
+                <h3><?php echo htmlspecialchars((string) $doc['degree']); ?> <?php echo htmlspecialchars($doc['full_name']); ?></h3>
+                <p class="lead"><?php echo htmlspecialchars($specialties[$doc['specialty']] ?? 'Khám và theo dõi theo chuyên khoa được phân công.'); ?></p>
+                <p><a class="btn-booking" href="/index.php?action=booking&doctor_id=<?php echo (int) $doc['doctor_id']; ?>">Đặt với bác sĩ này</a></p>
+            </div>
+        </article>
+    <?php endforeach; ?>
 </section>
 
 <section class="steps-band">

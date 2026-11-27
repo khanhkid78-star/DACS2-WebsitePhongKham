@@ -29,6 +29,7 @@ require_once __DIR__ . '/../partials/navbar.php';
             <option value="Scheduled">Đã lên lịch</option>
             <option value="Completed">Đã khám xong</option>
             <option value="Cancelled">Đã hủy</option>
+            <option value="NoShow">Trễ hẹn</option>
         </select>
     </label>
     <label>Bác sĩ

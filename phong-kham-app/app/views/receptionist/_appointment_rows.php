@@ -4,6 +4,7 @@ $labels = array(
     'Scheduled' => array('Đã lên lịch', 'badge-ok'),
     'Completed' => array('Đã khám xong', 'badge-done'),
     'Cancelled' => array('Đã hủy', 'badge-cancel'),
+    'NoShow' => array('Trễ hẹn', 'badge-cancel'),
 );
 if (empty($appointments)): ?>
     <tr><td colspan="8">Không có lịch khớp bộ lọc.</td></tr>
@@ -26,7 +27,7 @@ if (empty($appointments)): ?>
         <td class="clip" title="<?php echo htmlspecialchars((string) $app['note']); ?>"><?php echo htmlspecialchars((string) $app['note']); ?></td>
         <td><span class="badge <?php echo $st[1]; ?>"><?php echo htmlspecialchars((string) $st[0]); ?></span></td>
         <td>
-            <?php if ($app['status'] !== 'Cancelled'): ?>
+            <?php if ($app['status'] !== 'Cancelled' && $app['status'] !== 'NoShow'): ?>
                 <button class="btn-ghost" type="button" data-appt="<?php echo $payload; ?>">Sửa</button>
             <?php endif; ?>
         </td>
