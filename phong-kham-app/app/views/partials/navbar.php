@@ -6,38 +6,39 @@ $role = Auth::getRole();
 <div class="top-header">
     Hotline: 0931 999 309 | Giờ làm việc: T2-T7 (7:00 - 17:00), CN (7:00 - 11:00)
 </div>
-<div class="navbar">
-    <a href="/index.php" class="navbar-brand">
-        <span class="navbar-mark">PK</span>
-        <span>
-            Hưng Định
-            <span class="brand-sub">Phòng khám đa khoa</span>
-        </span>
-    </a>
-
-
-        <?php if (Auth::isLoggedIn()): ?>
-        <div class="nav-links">
-            <span class="bell-wrap">
-                <button class="nav-bell" id="nav-bell" type="button" aria-label="Thông báo">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
-                    <span class="bell-count" id="bell-count"></span>
-                </button>
-                <div class="bell-panel" id="bell-panel"></div>
+<div class="top-lock">
+    <div class="navbar">
+        <a href="/index.php" class="navbar-brand">
+            <span class="navbar-mark">PK</span>
+            <span>
+                Hưng Định
+                <span class="brand-sub">Phòng khám đa khoa</span>
             </span>
-            <span class="nav-user"><?php echo htmlspecialchars((string) ($_SESSION['username'] ?? '')); ?></span>
-            <a href="/index.php?action=logout<?php echo Auth::currentTab() !== '' ? '&tab=' . urlencode(Auth::currentTab()) : ''; ?>" class="nav-logout">Đăng xuất</a>
-        </div>
-    <?php else: ?>
-        <div class="nav-links">
-            <a href="/index.php">Trang Chủ</a>
-            <a href="/index.php?action=booking">Đặt lịch khám</a>
-            <a class="nav-login" href="/index.php?action=login&next=booking" data-open="login">Đăng nhập</a>
-            <a class="nav-register" href="/index.php?action=register" data-open="register">Đăng ký</a>
-        </div>
-    <?php endif; ?>
-</div>
+        </a>
 
+
+            <?php if (Auth::isLoggedIn()): ?>
+            <div class="nav-links">
+                <span class="bell-wrap">
+                    <button class="nav-bell" id="nav-bell" type="button" aria-label="Thông báo">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+                        <span class="bell-count" id="bell-count"></span>
+                    </button>
+                    <div class="bell-panel" id="bell-panel"></div>
+                </span>
+                <span class="nav-user"><?php echo htmlspecialchars((string) ($_SESSION['username'] ?? '')); ?></span>
+                <a href="/index.php?action=logout<?php echo Auth::currentTab() !== '' ? '&tab=' . urlencode(Auth::currentTab()) : ''; ?>" class="nav-logout">Đăng xuất</a>
+            </div>
+        <?php else: ?>
+            <div class="nav-links">
+                <a href="/index.php">Trang Chủ</a>
+                <a href="/index.php?action=booking">Đặt lịch khám</a>
+                <a class="nav-login" href="/index.php?action=login&next=booking" data-open="login">Đăng nhập</a>
+                <a class="nav-register" href="/index.php?action=register" data-open="register">Đăng ký</a>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
 <?php if (Auth::isLoggedIn()): ?>
 <button class="side-toggle" id="side-toggle" type="button" aria-label="Đóng mở mục lục"><span></span></button>
 <aside class="side-nav" id="side-nav">

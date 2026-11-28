@@ -9,7 +9,7 @@ require __DIR__ . '/../partials/navbar.php';
         <h2>Dịch vụ khám</h2>
         <p class="lead">Giá này dùng cho bệnh án ghi từ lúc lưu trở đi. Hóa đơn đã lập không đổi.</p>
     </div>
-    <button class="btn-navy" type="button" data-open-box="service-modal">Thêm dịch vụ</button>
+    <button class="btn-navy" type="button" id="open-service">Thêm dịch vụ</button>
 </div>
 
 <form class="filters" id="service-filters">
@@ -103,6 +103,26 @@ document.addEventListener("DOMContentLoaded", function () {
     var sort = document.getElementById("service-sort");
     var body = document.getElementById("service-body");
     if (!q || !body) return;
+    var form = document.getElementById("service-form");
+    document.getElementById("open-service").addEventListener("click", function () {
+        form.reset();
+        document.getElementById("service-id").value = "0";
+        document.getElementById("service-title").textContent = "Thêm dịch vụ";
+        document.getElementById("service-submit").textContent = "Lưu dịch vụ";
+        openBox("service-modal");
+    });
+    document.addEventListener("click", function (event) {
+        var button = event.target.closest("[data-service]");
+        if (!button) return;
+        var data = JSON.parse(button.getAttribute("data-service"));
+        document.getElementById("service-id").value = data.id;
+        document.getElementById("service-specialty").value = String(data.specialty_id);
+        document.getElementById("service-name").value = data.name;
+        document.getElementById("service-price").value = data.price;
+        document.getElementById("service-title").textContent = "Sửa dịch vụ #" + data.id;
+        document.getElementById("service-submit").textContent = "Cập nhật";
+        openBox("service-modal");
+    });
     function apply() {
         var needle = q.value.toLowerCase().trim();
         var digits = needle.replace(/\D/g, "");

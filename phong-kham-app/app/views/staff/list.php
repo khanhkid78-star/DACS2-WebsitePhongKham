@@ -135,8 +135,10 @@ $labels = array(
     <div class="modal-card">
         <button class="modal-x" type="button" data-close-box>Đóng</button>
         <h2 id="detail-title">Chi tiết</h2>
-        <img id="detail-photo" class="avatar avatar-lg" alt="" hidden>
-        <div id="detail-body"></div>
+        <div class="detail-sheet">
+            <img id="detail-photo" class="avatar detail-portrait" alt="">
+            <div id="detail-body"></div>
+        </div>
 
         <button class="btn-ghost" type="button" id="history-toggle" hidden>Lịch sử bệnh án</button>
         <div id="history-box" hidden></div>
@@ -209,8 +211,14 @@ function loadPerson(kind, id, mode) {
             }
             document.getElementById("detail-title").textContent = "Chi tiết #" + d.id;
             var photo = document.getElementById("detail-photo");
-            photo.hidden = !d.photo_url;
-            photo.src = d.photo_url || "";
+            if (d.photo_url) {
+                photo.src = d.photo_url;
+                photo.classList.remove("is-empty");
+            } else {
+                photo.removeAttribute("src");
+                photo.classList.add("is-empty");
+            }
+            
             var html = "";
             Object.keys(fieldLabels).forEach(function (key) {
                 if (d[key] === undefined || d[key] === null || d[key] === "") return;
