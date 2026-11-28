@@ -68,8 +68,9 @@ $prices = array(
     </section>
 
     <?php if (Auth::isLoggedIn() && $role !== 'patient'): ?>
+        <script>document.body.classList.add("staff-home");</script>
             <section class="section">
-                <p class="lead">Các việc trong ca nằm ở mục lục bên trái. Trang này chỉ để vào nhanh.</p>
+                <p class="lead"></p>
             </section>
         <?php require_once __DIR__ . '/partials/footer.php'; return; ?>
     <?php endif; ?>
