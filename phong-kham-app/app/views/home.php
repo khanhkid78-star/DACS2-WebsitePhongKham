@@ -84,10 +84,10 @@ $prices = array(
             trước khi bạn đến.
         </p>
         <div class="actions">
-            <a class="btn-booking" href="/index.php?action=booking">
+            <a class="btn-booking" href="/index.php?action=booking"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
                 Đặt lịch khám
             </a>
-            <a class="btn-ghost" href="#chuyen-khoa">
+            <a class="btn-ghost" href="#chuyen-khoa"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg>
                 Xem 8 chuyên khoa
             </a>
         </div>
@@ -131,23 +131,65 @@ $prices = array(
 <section class="section" id="bac-si">
     <p class="kicker">Đội ngũ</p>
     <h2>Bác sĩ nhận khám tại Hưng Định</h2>
-    <p class="lead">Mỗi bác sĩ nhận một chuyên khoa. Chọn đúng người trước khi gửi giờ khám.</p>
-    <?php foreach ($doctors as $doc): ?>
-        <article class="doc-band">
-            <?php if (!empty($doc['has_photo']) && ($doc['has_photo'] === true || $doc['has_photo'] === 't' || $doc['has_photo'] === '1')): ?>
-                <img class="doc-portrait" src="/index.php?action=doctor_photo&id=<?php echo (int) $doc['doctor_id']; ?>" alt="">
-            <?php else: ?>
-                <span class="doc-portrait doc-fallback"><?php echo htmlspecialchars(mb_substr($doc['full_name'], 0, 1)); ?></span>
-            <?php endif; ?>
-            <div>
-                <p class="kicker"><?php echo htmlspecialchars((string) $doc['specialty']); ?></p>
-                <h3><?php echo htmlspecialchars((string) $doc['degree']); ?> <?php echo htmlspecialchars($doc['full_name']); ?></h3>
-                <p class="lead"><?php echo htmlspecialchars($specialties[$doc['specialty']] ?? 'Khám và theo dõi theo chuyên khoa được phân công.'); ?></p>
-                <p><a class="btn-booking" href="/index.php?action=booking&doctor_id=<?php echo (int) $doc['doctor_id']; ?>">Đặt với bác sĩ này</a></p>
+    <p class="lead">Dải bác sĩ tự chạy. Đưa chuột vào để dừng, kéo ngang để xem.</p>
+    <?php if (empty($doctors)): ?>
+        <p class="lead">Chưa có dữ liệu bác sĩ.</p>
+    <?php else: ?>
+        <div class="doc-marquee" id="doc-marquee">
+            <div class="doc-track">
+                <?php foreach ($doctors as $doc): ?>
+                    <article class="doc-card">
+                        <?php $shown = !empty($doc['has_photo']) && ($doc['has_photo'] === true || $doc['has_photo'] === 't' || $doc['has_photo'] === '1'); ?>
+                        <?php if ($shown): ?>
+                            <img src="/index.php?action=doctor_photo&id=<?php echo (int) $doc['doctor_id']; ?>" alt="">
+                        <?php else: ?>
+                            <span class="doc-fallback"><?php echo htmlspecialchars(mb_substr($doc['full_name'], 0, 1)); ?></span>
+                        <?php endif; ?>
+                        <p class="kicker"><?php echo htmlspecialchars((string) $doc['specialty']); ?></p>
+                        <h3><?php echo htmlspecialchars((string) ($doc['degree'] ?? '')); ?> <?php echo htmlspecialchars($doc['full_name']); ?></h3>
+                        <p class="lead"><?php echo htmlspecialchars($specialties[$doc['specialty']] ?? 'Khám và theo dõi theo chuyên khoa được phân công.'); ?></p>
+                        <p><a class="btn-booking" href="/index.php?action=booking&doctor_id=<?php echo (int) $doc['doctor_id']; ?>">Đặt với bác sĩ này</a></p>
+                    </article>
+                <?php endforeach; ?>
             </div>
-        </article>
-    <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 </section>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var box = document.getElementById("doc-marquee");
+    if (!box) return;
+    var track = box.querySelector(".doc-track");
+    track.insertAdjacentHTML("beforeend", track.innerHTML);
+    var paused = false;
+    var dragging = false;
+    var startX = 0;
+    var startLeft = 0;
+    setInterval(function () {
+        if (paused || dragging) return;
+        box.scrollLeft += 1;
+        if (box.scrollLeft >= track.scrollWidth / 2) box.scrollLeft = 0;
+    }, 16);
+    box.addEventListener("mouseenter", function () { paused = true; });
+    box.addEventListener("mouseleave", function () { paused = false; dragging = false; box.classList.remove("is-drag"); });
+    box.addEventListener("mousedown", function (event) {
+        if (event.target.closest("a, button")) return;
+        dragging = true;
+        box.classList.add("is-drag");
+        startX = event.pageX;
+        startLeft = box.scrollLeft;
+    });
+    window.addEventListener("mousemove", function (event) {
+        if (!dragging) return;
+        box.scrollLeft = startLeft - (event.pageX - startX);
+    });
+    window.addEventListener("mouseup", function () { dragging = false; box.classList.remove("is-drag"); });
+    box.addEventListener("wheel", function (event) {
+        box.scrollLeft += event.deltaY;
+        event.preventDefault();
+    }, { passive: false });
+});
+</script>
 
 <section class="steps-band">
     <div class="grid-3">

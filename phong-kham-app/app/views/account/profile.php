@@ -20,78 +20,54 @@ if ($currentGender !== '' && !in_array($currentGender, $genders, true)) {
 ?>
 
 <h2>Tài khoản</h2>
-<p class="lead">
-    Vai trò: <?php echo htmlspecialchars(Auth::roleLabel($accountUser['role'])); ?>.
-    Bạn không đổi được quyền.
-</p>
+<p class="lead">Vai trò: <?php echo htmlspecialchars(Auth::roleLabel($accountUser['role'])); ?>. Bạn không đổi được quyền.</p>
 
 <?php if ($accountKind !== 'admin' && $profile): ?>
-<form class="card form-wide" action="/index.php?action=save_profile" method="POST" enctype="multipart/form-data">
-    <?php if ($accountKind === 'patient'): ?>
-        <?php if (!empty($profile['photo'])): ?>
+<form class="card profile-sheet" action="/index.php?action=save_profile" method="POST" enctype="multipart/form-data">
+    <aside class="profile-side">
+        <?php if ($accountKind === 'patient' && !empty($profile['photo'])): ?>
             <img class="avatar avatar-lg" alt="" src="/index.php?action=account_photo">
         <?php else: ?>
-            <span class="avatar avatar-lg avatar-empty">?</span>
+            <span class="avatar avatar-lg avatar-empty"><?php echo htmlspecialchars(mb_substr((string) ($profile['full_name'] ?? '?'), 0, 1)); ?></span>
         <?php endif; ?>
-        <label>Ảnh cá nhân
-            <input type="file" name="photo" accept="image/jpeg,image/png,image/webp">
-        </label>
-        <label class="rx-check"><input type="checkbox" name="clear_photo" value="1"> Xóa ảnh hiện tại</label>
-    <?php endif; ?>
-
-    <label>Họ tên
-        <input type="text" name="full_name" value="<?php echo htmlspecialchars((string) ($profile['full_name'] ?? '')); ?>">
-    </label>
-    <div class="form-row">
-        <label>Ngày sinh
-            <input type="date" name="date_of_birth" value="<?php echo htmlspecialchars($dob); ?>">
-        </label>
-        <label>Giới tính
-            <select name="gender">
-                <?php foreach ($genders as $g): ?>
-                    <option value="<?php echo htmlspecialchars($g); ?>" <?php echo $currentGender === $g ? 'selected' : ''; ?>><?php echo htmlspecialchars($g); ?></option>
-                <?php endforeach; ?>
-            </select>
-        </label>
-    </div>
-    <div class="form-row">
-        <label>Số điện thoại
-            <input type="tel" name="phone" value="<?php echo htmlspecialchars((string) ($profile['phone'] ?? '')); ?>">
-        </label>
-        <label>Email
-            <input type="email" name="email" value="<?php echo htmlspecialchars((string) ($profile['email'] ?? '')); ?>">
-        </label>
-    </div>
-    <?php if ($accountKind === 'patient'): ?>
-        <label>Địa chỉ
-            <input type="text" name="address" value="<?php echo htmlspecialchars((string) ($profile['address'] ?? '')); ?>">
-        </label>
+        <?php if ($accountKind === 'patient'): ?>
+            <label>Ảnh cá nhân <input type="file" name="photo" accept="image/jpeg,image/png,image/webp"></label>
+            <label class="rx-check"><input type="checkbox" name="clear_photo" value="1"> Xóa ảnh hiện tại</label>
+        <?php endif; ?>
+    </aside>
+    <div class="profile-main">
+        <label>Họ tên <input type="text" name="full_name" value="<?php echo htmlspecialchars((string) ($profile['full_name'] ?? '')); ?>"></label>
         <div class="form-row">
-            <label>CCCD
-                <input type="text" name="cccd" maxlength="12" value="<?php echo htmlspecialchars((string) ($profile['cccd'] ?? '')); ?>">
-            </label>
-            <label>Số BHYT
-                <input type="text" name="bhyt" maxlength="15" value="<?php echo htmlspecialchars((string) ($profile['bhyt'] ?? '')); ?>">
+            <label>Ngày sinh <input type="date" name="date_of_birth" value="<?php echo htmlspecialchars($dob); ?>"></label>
+            <label>Giới tính
+                <select name="gender">
+                    <?php foreach ($genders as $g): ?>
+                        <option value="<?php echo htmlspecialchars($g); ?>" <?php echo $currentGender === $g ? 'selected' : ''; ?>><?php echo htmlspecialchars($g); ?></option>
+                    <?php endforeach; ?>
+                </select>
             </label>
         </div>
-    <?php elseif ($accountKind === 'doctor' || $accountKind === 'nurse'): ?>
         <div class="form-row">
-            <label>Chuyên khoa
-                <input type="text" name="specialty" value="<?php echo htmlspecialchars((string) ($profile['specialty'] ?? '')); ?>">
-            </label>
-            <label>Bằng cấp
-                <input type="text" name="degree" value="<?php echo htmlspecialchars((string) ($profile['degree'] ?? '')); ?>">
-            </label>
+            <label>Số điện thoại <input type="tel" name="phone" value="<?php echo htmlspecialchars((string) ($profile['phone'] ?? '')); ?>"></label>
+            <label>Email <input type="email" name="email" value="<?php echo htmlspecialchars((string) ($profile['email'] ?? '')); ?>"></label>
         </div>
-    <?php else: ?>
-        <label>Địa chỉ
-            <input type="text" name="address" value="<?php echo htmlspecialchars((string) ($profile['address'] ?? '')); ?>">
-        </label>
-        <label>Ca làm
-            <input type="text" name="shift" value="<?php echo htmlspecialchars((string) ($profile['shift'] ?? '')); ?>">
-        </label>
-    <?php endif; ?>
-    <p><button class="btn-navy" type="submit">Lưu hồ sơ</button></p>
+        <?php if ($accountKind === 'patient'): ?>
+            <label>Địa chỉ <input type="text" name="address" value="<?php echo htmlspecialchars((string) ($profile['address'] ?? '')); ?>"></label>
+            <div class="form-row">
+                <label>CCCD <input type="text" name="cccd" maxlength="12" value="<?php echo htmlspecialchars((string) ($profile['cccd'] ?? '')); ?>"></label>
+                <label>Số BHYT <input type="text" name="bhyt" maxlength="15" value="<?php echo htmlspecialchars((string) ($profile['bhyt'] ?? '')); ?>"></label>
+            </div>
+        <?php elseif ($accountKind === 'doctor' || $accountKind === 'nurse'): ?>
+            <div class="form-row">
+                <label>Chuyên khoa <input type="text" name="specialty" value="<?php echo htmlspecialchars((string) ($profile['specialty'] ?? '')); ?>"></label>
+                <label>Bằng cấp <input type="text" name="degree" value="<?php echo htmlspecialchars((string) ($profile['degree'] ?? '')); ?>"></label>
+            </div>
+        <?php else: ?>
+            <label>Địa chỉ <input type="text" name="address" value="<?php echo htmlspecialchars((string) ($profile['address'] ?? '')); ?>"></label>
+            <label>Ca làm <input type="text" name="shift" value="<?php echo htmlspecialchars((string) ($profile['shift'] ?? '')); ?>"></label>
+        <?php endif; ?>
+        <p><button class="btn-navy" type="submit">Lưu hồ sơ</button></p>
+    </div>
 </form>
 <?php endif; ?>
 

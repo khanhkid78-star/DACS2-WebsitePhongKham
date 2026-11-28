@@ -736,19 +736,30 @@ table tr:hover td { background: #f8f1ea; }
 
 body.modal-lock { overflow: hidden; }
 
+body.modal-lock { overflow: hidden; }
+
 .modal {
     position: fixed;
     inset: 0;
     z-index: 80;
-    display: none;
+    display: flex;
     justify-content: center;
     align-items: flex-start;
     overflow: auto;
     padding: 32px 16px;
-    background: rgba(6, 36, 63, 0.55);
+    background: rgba(6, 36, 63, 0);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .22s ease, visibility .22s ease, background .22s ease;
 }
 
-.modal.is-open { display: flex; }
+.modal.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    background: rgba(6, 36, 63, .55);
+}
 
 .modal-card {
     position: relative;
@@ -758,21 +769,22 @@ body.modal-lock { overflow: hidden; }
     border: 1px solid #e4dcd0;
     border-radius: 16px;
     background: #fffdf8;
-    box-shadow: 0 24px 60px rgba(6, 36, 63, 0.28);
-    animation: popIn .28s ease;
+    box-shadow: 0 24px 60px rgba(6, 36, 63, .28);
+    transform: translateY(22px) scale(.96);
+    transition: transform .28s cubic-bezier(.2, .8, .2, 1);
 }
 
-@keyframes popIn {
-    from { opacity: 0; transform: translateY(16px) scale(.98); }
-    to { opacity: 1; transform: none; }
-}
+.modal.is-open .modal-card { transform: none; }
 
 .modal-x {
     float: right;
+    width: 36px;
+    height: 36px;
     border: 0;
-    background: transparent;
-    color: #0a3a6b;
-    font-weight: 700;
+    border-radius: 8px;
+    background: #f6f1ea url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%230a3a6b' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E") center/16px no-repeat;
+    color: transparent;
+    font-size: 0;
     cursor: pointer;
 }
 
@@ -1240,4 +1252,85 @@ tr.appt-open {
     display: inline-block; 
     width: auto; 
     margin: 0 4px 0 0; 
+}
+
+.bell-item time { 
+    display: block; 
+    margin-bottom: 2px; 
+    color: #8a7560; 
+    font-size: 12px; 
+    font-weight: 600; 
+}
+
+.foot-line { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+}
+.foot-line svg { 
+    width: 16px; 
+    height: 16px; 
+    stroke: #d5e2ef; 
+    fill: none; stroke-width: 2; 
+    flex: 0 0 auto; 
+}
+.site-footer a { 
+    color: #fffdf8; 
+}
+
+.profile-sheet { 
+    display: grid; 
+    grid-template-columns: 220px 1fr; 
+    gap: 22px; 
+    align-items: start; 
+}
+.profile-side { 
+    text-align: center; 
+}
+.profile-main label:first-child { 
+    margin-top: 0; 
+}
+@media (max-width: 700px) { .profile-sheet { grid-template-columns: 1fr; } }
+
+.doc-marquee { overflow: hidden; cursor: grab; }
+
+.doc-marquee.is-drag { cursor: grabbing; }
+
+.doc-track { 
+    display: flex; 
+    gap: 16px; 
+    width: max-content; 
+    padding-bottom: 8px; }
+
+.doc-card {
+    width: 280px;
+    flex: 0 0 280px;
+    padding: 14px;
+    background: #fffdf8;
+    border: 1px solid #e4dcd0;
+    border-radius: 16px;
+}
+.doc-card img, .doc-card .doc-fallback {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 12px;
+    background: #f8e7d6;
+}
+.doc-fallback { 
+    display: grid; 
+    place-items: center; 
+    color: #0a3a6b; 
+    font-size: 42px; 
+    font-weight: 700; 
+}
+
+.btn-booking svg, .btn-ghost svg, .btn-navy svg {
+    width: 16px; 
+    height: 16px; 
+    margin-right: 6px; 
+    vertical-align: -3px;
+    stroke: currentColor; 
+    fill: none; 
+    stroke-width: 2;
 }

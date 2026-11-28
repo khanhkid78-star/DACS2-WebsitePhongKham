@@ -240,6 +240,16 @@ function openBox(id) {
     document.body.classList.add("modal-lock");
 }
 
+document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape") return;
+    var open = document.querySelectorAll(".modal.is-open, #auth-modal.is-open");
+    if (!open.length) return;
+    open[open.length - 1].classList.remove("is-open");
+    if (!document.querySelector(".modal.is-open, #auth-modal.is-open")) {
+        document.body.classList.remove("modal-lock");
+    }
+});
+
 function esc(value) {
     return String(value || "").replace(/[&<>"]/g, function (ch) {
         return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch];
@@ -641,7 +651,11 @@ if (window.jQuery) {
                 }
                 var html = "";
                 data.items.forEach(function (item) {
+                    var raw = String(item.created_at || "").replace("T", " ");
+                    var m = raw.match(/(\d{4})-(\d{2})-(\d{2})[ ](\d{2}):(\d{2})/);
+                    var when = m ? (m[3] + "/" + m[2] + "/" + m[1] + " " + m[4] + ":" + m[5]) : raw.slice(0, 16);
                     html += '<a class="bell-item' + (item.is_read ? "" : " is-new") + '" href="' + esc(item.link || "#") + '">'
+                        + '<time>' + esc(when) + '</time>'
                         + '<strong>' + esc(item.title) + '</strong>'
                         + '<span>' + esc(item.body) + '</span></a>';
                 });
