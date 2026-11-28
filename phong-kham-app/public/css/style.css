@@ -771,7 +771,7 @@ body.modal-lock { overflow: hidden; }
     background: #fffdf8;
     box-shadow: 0 24px 60px rgba(6, 36, 63, .28);
     transform: translateY(22px) scale(.96);
-    transition: transform .28s cubic-bezier(.2, .8, .2, 1);
+    transition: transform .16s ease;
 }
 
 .modal.is-open .modal-card { transform: none; }
@@ -1303,12 +1303,31 @@ tr.appt-open {
     padding-bottom: 8px; }
 
 .doc-card {
+    display: flex;
+    flex-direction: column;
     width: 280px;
     flex: 0 0 280px;
     padding: 14px;
     background: #fffdf8;
     border: 1px solid #e4dcd0;
     border-radius: 16px;
+}
+
+.doc-card .kicker {
+    margin-top: 16px;
+}
+
+.doc-card h3 {
+    min-height: 3.2em;
+}
+
+.doc-card .lead {
+    flex: 1 1 auto;
+}
+
+.doc-card .doc-book {
+    margin-top: auto;
+    padding-top: 14px;
 }
 .doc-card img, .doc-card .doc-fallback {
     width: 100%;
@@ -1356,37 +1375,40 @@ body {
     min-height: calc(100vh - 320px);
 }
 
-.detail-sheet {
+#person-detail .detail-sheet {
     display: grid;
-    grid-template-columns: 180px 1fr;
-    gap: 8px 28px;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 20px 32px;
     align-items: start;
 }
 
-.detail-portrait {
+#person-detail .detail-portrait {
     width: 180px;
     height: 220px;
-    margin: 0;
-    object-fit: cover;
-}
-
-.detail-portrait.is-empty {
     background: #efe6da url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%235c6773' stroke-width='1.6' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='8' r='3'/%3E%3Cpath d='M5 19c1.5-3 3.8-4.5 7-4.5S17.5 16 19 19'/%3E%3C/svg%3E") center/72px no-repeat;
 }
 
-#detail-body {
+#person-detail .detail-portrait img {
+    display: block;
+    width: 180px;
+    height: 220px;
+    object-fit: cover;
+}
+
+#person-detail #detail-body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     column-gap: 28px;
+    align-content: start;
 }
 
-#detail-body p {
+#person-detail #detail-body p {
     margin: 0 0 12px;
 }
 
 @media (max-width: 700px) {
-    .detail-sheet,
-    #detail-body {
+    #person-detail .detail-sheet,
+    #person-detail #detail-body {
         grid-template-columns: 1fr;
     }
 }

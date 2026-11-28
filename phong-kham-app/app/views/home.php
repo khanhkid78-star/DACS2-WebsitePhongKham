@@ -148,7 +148,11 @@ $prices = array(
                         <p class="kicker"><?php echo htmlspecialchars((string) $doc['specialty']); ?></p>
                         <h3><?php echo htmlspecialchars((string) ($doc['degree'] ?? '')); ?> <?php echo htmlspecialchars($doc['full_name']); ?></h3>
                         <p class="lead"><?php echo htmlspecialchars($specialties[$doc['specialty']] ?? 'Khám và theo dõi theo chuyên khoa được phân công.'); ?></p>
-                        <p><a class="btn-booking" href="/index.php?action=booking&doctor_id=<?php echo (int) $doc['doctor_id']; ?>">Đặt với bác sĩ này</a></p>
+                        <p class="doc-book">
+                            <a class="btn-booking" href="/index.php?action=booking&doctor_id=<?php echo (int) $doc['doctor_id']; ?>">
+                                Đặt với bác sĩ này
+                            </a>
+                        </p>
                     </article>
                 <?php endforeach; ?>
             </div>

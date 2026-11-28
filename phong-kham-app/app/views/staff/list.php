@@ -136,7 +136,9 @@ $labels = array(
         <button class="modal-x" type="button" data-close-box>Đóng</button>
         <h2 id="detail-title">Chi tiết</h2>
         <div class="detail-sheet">
-            <img id="detail-photo" class="avatar detail-portrait" alt="">
+            <div class="detail-portrait" id="detail-frame">
+                <img id="detail-photo" alt="">
+            </div>
             <div id="detail-body"></div>
         </div>
 
@@ -194,7 +196,13 @@ function setPersonField(name, value) {
     }
     el.value = value || "";
 }
+
 function loadPerson(kind, id, mode) {
+    if (mode !== "edit") {
+        document.getElementById("detail-title").textContent = "Chi tiết #" + id;
+        document.getElementById("detail-body").innerHTML = "<p class=\"lead\">Đang tải…</p>";
+        openBox("person-detail");
+    }
     jQuery.getJSON("/index.php?action=staff_detail&kind=" + encodeURIComponent(kind) + "&id=" + encodeURIComponent(id))
         .done(function (res) {
             if (!res || !res.ok) return;
@@ -213,12 +221,12 @@ function loadPerson(kind, id, mode) {
             var photo = document.getElementById("detail-photo");
             if (d.photo_url) {
                 photo.src = d.photo_url;
-                photo.classList.remove("is-empty");
+                photo.hidden = false;
             } else {
                 photo.removeAttribute("src");
-                photo.classList.add("is-empty");
+                photo.hidden = true;
             }
-            
+
             var html = "";
             Object.keys(fieldLabels).forEach(function (key) {
                 if (d[key] === undefined || d[key] === null || d[key] === "") return;
@@ -324,7 +332,7 @@ document.getElementById("history-toggle").addEventListener("click", function () 
         });
 });
 
-window.addEventListener("load", function () {
+document.addEventListener("DOMContentLoaded", function () {
     jQuery(document).on("click", "tr.person-row", function (e) {
         if (jQuery(e.target).closest("button, a, form").length && !jQuery(e.target).closest("[data-edit]").length) {
             return;
