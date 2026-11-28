@@ -126,6 +126,57 @@ class User {
         }
     }
 
+    public function updateLogin($userId, $username, $newPassword, $role) {
+        $current = $this->findById($userId);
+        if (!$current) {
+            return 'Không thấy tài khoản.';
+        }
+        if ($current['role'] === 'patient') {
+            return 'Không sửa tài khoản bệnh nhân ở đây.';
+        }
+        $allowed = array('admin', 'doctor', 'nurse', 'receptionist');
+        $username = trim($username);
+        if ($username === '' || !in_array($role, $allowed, true)) {
+            return 'Nhập tên đăng nhập và chọn vai trò.';
+        }
+        if ($newPassword !== '' && strlen($newPassword) < 5) {
+            return 'Mật khẩu mới tối thiểu 5 ký tự.';
+        }
+        $taken = $this->conn->prepare(
+            "SELECT user_id FROM users WHERE username = :username AND user_id <> :id"
+        );
+        $taken->execute(array(
+            ':username' => $username,
+            ':id' => (int) $userId,
+        ));
+        if ($taken->fetch(PDO::FETCH_ASSOC)) {
+            return 'Tên đăng nhập đã tồn tại.';
+        }
+        if ($newPassword !== '') {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET username = :username, password = :password, role = :role
+                 WHERE user_id = :id"
+            );
+            $stmt->execute(array(
+                ':username' => $username,
+                ':password' => password_hash($newPassword, PASSWORD_DEFAULT),
+                ':role' => $role,
+                ':id' => (int) $userId,
+            ));
+        } else {
+            $stmt = $this->conn->prepare(
+                "UPDATE users SET username = :username, role = :role WHERE user_id = :id"
+            );
+            $stmt->execute(array(
+                ':username' => $username,
+                ':role' => $role,
+                ':id' => (int) $userId,
+            ));
+        }
+        return '';
+    }
+
     public function resetPassword($username, $password) {
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $stmt = $this->conn->prepare(

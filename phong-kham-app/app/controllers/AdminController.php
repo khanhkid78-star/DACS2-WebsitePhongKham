@@ -63,6 +63,28 @@ class AdminController {
             }
         }
 
+        if ($form === 'edit') {
+            $id = (int) ($_POST['user_id'] ?? 0);
+            $username = trim($_POST['username'] ?? '');
+            $password = $_POST['password'] ?? '';
+            $role = $_POST['role'] ?? '';
+            $message = $userModel->updateLogin($id, $username, $password, $role);
+            if ($message === '') {
+                if ($id === (int) $_SESSION['user_id']) {
+                    $_SESSION['username'] = $username;
+                    $_SESSION['role'] = $role;
+                    Auth::remember();
+                }
+                Auth::flash('Đã cập nhật tài khoản.', true);
+                $next = Auth::getRole() === 'admin'
+                    ? '/index.php?action=admin_users'
+                    : Auth::dashboardUrl(Auth::getRole());
+                header('Location: ' . $next);
+                exit();
+            }
+            Auth::flash($message);
+        }
+
         header('Location: /index.php?action=admin_users');
         exit();
     }

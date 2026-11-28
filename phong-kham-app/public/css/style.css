@@ -1409,3 +1409,15 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+.account-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 16px;
+}
+
+.account-actions button {
+    width: auto;
+    margin: 0;
+}

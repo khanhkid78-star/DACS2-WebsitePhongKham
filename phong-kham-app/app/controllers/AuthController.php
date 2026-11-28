@@ -228,22 +228,43 @@ class AuthController {
             header('Location: /index.php?action=' . $back);
             exit();
         }
+        
+        $wasAdmin = Auth::getRole() === 'admin';
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
-        $message = (new User((new Database())->getConnection()))->updateAccount(
-            (int) $_SESSION['user_id'],
-            $username,
-            $password,
-            $_POST
-        );
+        $users = new User((new Database())->getConnection());
+        if ($wasAdmin && isset($_POST['role'])) {
+            $message = $users->updateLogin(
+                (int) $_SESSION['user_id'],
+                $username,
+                $password,
+                $_POST['role']
+            );
+        } else {
+            $message = $users->updateAccount(
+                (int) $_SESSION['user_id'],
+                $username,
+                $password,
+                $_POST
+            );
+        }
         if ($message === '') {
             $_SESSION['username'] = $username;
+            if ($wasAdmin && isset($_POST['role'])) {
+                $_SESSION['role'] = $_POST['role'];
+            }
             Auth::remember();
             Auth::flash('Đã cập nhật tài khoản.', true);
         } else {
             Auth::flash($message);
         }
-        header('Location: /index.php?action=account');
+        if (Auth::getRole() === 'admin') {
+            header('Location: /index.php?action=admin_users');
+        } elseif ($wasAdmin) {
+            header('Location: ' . Auth::dashboardUrl(Auth::getRole()));
+        } else {
+            header('Location: /index.php?action=account');
+        }
         exit();
     }
 
