@@ -1396,10 +1396,7 @@ body {
 }
 
 #person-detail #detail-body {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 28px;
-    align-content: start;
+    display: block;
 }
 
 #person-detail #detail-body p {
