@@ -1227,3 +1227,17 @@ tr.appt-open {
     .doc-band { grid-template-columns: 1fr; }
     .doc-portrait { width: 100%; height: 240px; }
 }
+
+.svc-table input { 
+    width: 100%; 
+    min-width: 140px; 
+    margin-top: 0; 
+}
+.row-actions { 
+    white-space: nowrap; 
+}
+.row-actions form, .row-actions button { 
+    display: inline-block; 
+    width: auto; 
+    margin: 0 4px 0 0; 
+}
