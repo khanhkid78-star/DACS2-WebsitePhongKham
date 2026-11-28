@@ -28,49 +28,72 @@ require __DIR__ . '/../partials/navbar.php';
 <div class="table-wrap list-scroll">
 <table class="svc-table">
     <thead>
-        <tr><th>Chuyên khoa</th><th>Dịch vụ</th><th>Giá</th><th></th></tr>
+        <tr>
+            <th>Chuyên khoa</th>
+            <th>Dịch vụ</th>
+            <th>Giá</th>
+            <th></th>
+        </tr>
     </thead>
     <tbody id="service-body">
-    <?php foreach ($services as $row): $sid = (int) $row['service_id']; ?>
-        <tr data-price="<?php echo (float) $row['price']; ?>" data-text="<?php echo htmlspecialchars(mb_strtolower($row['specialty'] . ' ' . $row['name'], 'UTF-8')); ?>">
+    <?php foreach ($services as $row):
+        $sid = (int) $row['service_id'];
+        $payload = htmlspecialchars(json_encode(array(
+            'id' => $sid,
+            'specialty_id' => (int) $row['specialty_id'],
+            'name' => (string) $row['name'],
+            'price' => (float) $row['price'],
+        ), JSON_UNESCAPED_UNICODE), ENT_QUOTES);
+    ?>
+        <tr
+            data-price="<?php echo (float) $row['price']; ?>"
+            data-text="<?php echo htmlspecialchars(mb_strtolower($row['specialty'] . ' ' . $row['name'], 'UTF-8')); ?>"
+        >
             <td><?php echo htmlspecialchars($row['specialty']); ?></td>
-            <td><input form="svc-<?php echo $sid; ?>" type="text" name="name" value="<?php echo htmlspecialchars($row['name']); ?>" required></td>
-            <td><input form="svc-<?php echo $sid; ?>" type="number" name="price" min="0" step="1000" value="<?php echo (float) $row['price']; ?>" required></td>
+            <td><?php echo htmlspecialchars($row['name']); ?></td>
+            <td><?php echo number_format((float) $row['price']); ?> đ</td>
             <td class="row-actions">
-                <button class="btn-navy" type="submit" form="svc-<?php echo $sid; ?>">Lưu</button>
-                <button class="btn-logout" type="submit" form="del-<?php echo $sid; ?>">Xóa</button>
+                <button class="btn-ghost" type="button" data-service="<?php echo $payload; ?>">
+                    Sửa
+                </button>
+                <form action="/index.php?action=delete_service" method="POST" onsubmit="return confirm('Xóa dịch vụ này?');">
+                    <input type="hidden" name="service_id" value="<?php echo $sid; ?>">
+                    <button class="btn-logout" type="submit">Xóa</button>
+                </form>
             </td>
         </tr>
     <?php endforeach; ?>
     </tbody>
 </table>
 </div>
-<?php foreach ($services as $row): $sid = (int) $row['service_id']; ?>
-    <form id="svc-<?php echo $sid; ?>" action="/index.php?action=save_service" method="POST" hidden>
-        <input type="hidden" name="service_id" value="<?php echo $sid; ?>">
-        <input type="hidden" name="specialty_id" value="<?php echo (int) $row['specialty_id']; ?>">
-    </form>
-    <form id="del-<?php echo $sid; ?>" action="/index.php?action=delete_service" method="POST" hidden onsubmit="return confirm('Xóa dịch vụ này?');">
-        <input type="hidden" name="service_id" value="<?php echo $sid; ?>">
-    </form>
-<?php endforeach; ?>
 
 <div class="modal" id="service-modal">
     <div class="modal-card">
         <button class="modal-x" type="button" data-close-box>Đóng</button>
-        <h2>Thêm dịch vụ</h2>
-        <form action="/index.php?action=save_service" method="POST">
-            <input type="hidden" name="service_id" value="0">
-            <label>Chuyên khoa
-                <select name="specialty_id" required>
+        <h2 id="service-title">Thêm dịch vụ</h2>
+        <form id="service-form" action="/index.php?action=save_service" method="POST">
+            <input type="hidden" name="service_id" id="service-id" value="0">
+            <label>
+                Chuyên khoa
+                <select name="specialty_id" id="service-specialty" required>
                     <?php foreach ($specialties as $row): ?>
-                        <option value="<?php echo (int) $row['specialty_id']; ?>"><?php echo htmlspecialchars($row['name']); ?></option>
+                        <option value="<?php echo (int) $row['specialty_id']; ?>">
+                            <?php echo htmlspecialchars($row['name']); ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
             </label>
-            <label>Tên dịch vụ <input type="text" name="name" required></label>
-            <label>Giá <input type="number" name="price" min="0" step="1000" required></label>
-            <p><button class="btn-navy" type="submit">Lưu dịch vụ</button></p>
+            <label>
+                Tên dịch vụ
+                <input type="text" name="name" id="service-name" required>
+            </label>
+            <label>
+                Giá
+                <input type="number" name="price" id="service-price" min="0" step="1000" required>
+            </label>
+            <p>
+                <button class="btn-navy" type="submit" id="service-submit">Lưu dịch vụ</button>
+            </p>
         </form>
     </div>
 </div>
